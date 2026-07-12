@@ -22,21 +22,37 @@ get_header(); ?>
 
 				        <div class="entry-content special-page-content">
 
-				                <!-- custom HTML starts here -->
+							<!-- custom HTML starts here -->
+
+
+							<p>some words here</p>
 
 
 
+							<script src='https://d3js.org/d3.v5.min.js'></script>
 
-						<p>some words here</p>
+							<svg width="400" height="400">
+
+							</svg>
+
+							<script>
+									var size_data = [4,8,15,16,23,42];
+									var circle_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
+									d3.select('svg')
+											.selectAll("circle")
+											.data(size_data)
+											.enter()
+											.append("circle")
+											.attr("r", function(d, ) {return d; })
+											.attr("cy", 50)
+											.attr("cx", function(d, i) {return 50+50*i; })
+											.data(circle_colors)
+											.attr("fill", function(d, ) {return d; });
+							</script>
 
 
 
-
-
-
-
-
-						<!-- custom HTML ends here -->
+							<!-- custom HTML ends here -->
 
 				        </div><!-- .entry-content -->
 
