@@ -20,6 +20,7 @@ TEST*
 # Project-specific
 FA_lookup.py
 secret.py
+secret.sh
 saved_state/
 platforms.py
 ctrl_sw_to_os_map.py
