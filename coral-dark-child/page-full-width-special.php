@@ -36,18 +36,19 @@ get_header(); ?>
 							</svg>
 
 							<script>
-									var size_data = [4,8,15,16,23,42];
-									var circle_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
+									const size_data = [4,8,15,16,23,42];
+									const circle_colors = ["red", "orange", "yellow", "green", "blue", "purple"];
 									d3.select('svg')
 											.selectAll("circle")
-											.data(size_data)
+											.data(circle_colors)
 											.enter()
 											.append("circle")
-											.attr("r", function(d, ) {return d; })
+											.attr("fill", function(d, ) {return d; })
 											.attr("cy", 50)
-											.attr("cx", function(d, i) {return 50+50*i; })
-											.data(circle_colors)
-											.attr("fill", function(d, ) {return d; });
+											.data(size_data)
+											.transition().duration(2000)	// not working yet. may need the async, await, etc. pattern
+											.attr("r", function(d, ) {return d; })
+											.attr("cx", function(d, i) {return 50+50*i; });
 							</script>
 
 
