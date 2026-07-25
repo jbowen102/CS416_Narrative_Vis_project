@@ -1,36 +1,66 @@
+# files
 .~*
-__pycache__/
-*.py[cod]
-*.out
 .ipynb_checkpoints
+.lintr.R
+.Rhistory
+.RData
 .databricks
-
+.DS_Store
 .editorconfig
 .vscode
-*.code-workspace
 
+# file types
+*.py[cod]
+*.out
+*.objs*
+*.code-workspace
+*.db
+*.npy
+*.tar
+*.zip
+*.url
+*.pdf
+*.docx
+*.png
+
+# dirs
+*.egg-info/
+.venv/
+__pycache__/
 build/
 dist/
-*.egg-info/
+import/
+export/
+output/
+lo{g,gs}/
+*data/
+plo{t,ts}/
+fi{g,gs}/
+reference*/
+temp/
+bu/
+saved_state/
 
-# Ignore any file/dir/symlink starting w/ these names:
+# Experimental/test/temp/scratch
+*_TEST.{py,ipynb}
+*_TEMP.{py,ipynb}
+*_exp.ipynb
+*scratch.ods
 TEST*
-import*
-export*
-reference*
-img*
 
-# Experimental/test scripts
-*_TEST.py
-*_TEMP.py
-*_TEMP.ipynb
+# secret
+secret*.*
+dir_names.*
 
-########################################
 
 # Project-specific
-dir_names.py
-dir_names.sh
-secret.py
-secret.sh
-source_data*/
-bu/
+# ==============================================
+img*
+*.csv
+*.[xX][lL][sS]*
+
+
+
+
+
+# https://www.digitalocean.com/community/tools/glob
