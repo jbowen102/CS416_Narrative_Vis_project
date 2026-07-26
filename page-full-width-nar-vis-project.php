@@ -47,7 +47,8 @@ get_header(); ?>
 									const margin = 70;
 
 									// const mpg_data = await d3.csv("https://flunky.github.io/cars2017.csv", d3.autoType);
-									const stk_data = await d3.csv("/data/CS416_NVis_project/synthetic_migration_data.csv", d3.autoType);
+									// const stk_data = await d3.csv("/data/CS416_NVis_project/synthetic_migration_data.csv", d3.autoType);
+									const stk_data = await d3.csv("/data/CS416_NVis_project/swallow_tailed_kite_20260725_clean.csv", d3.autoType);
 
 									const x = d3.scaleLinear()
 										.domain([-108, -50])
@@ -65,11 +66,11 @@ get_header(); ?>
 										.append("circle")
 										.attr("fill", "royalblue")
 										.attr("stroke", "silver")
-										.transition().duration(2000)
+										// .transition().duration(4000)
 										.attr("cx", function (d) { return x(d.longitude); })
-										.transition().duration(2000)
+										// .transition().duration(4000)
 										.attr("cy", function (d) { return y(d.latitude); })
-										.attr("r", 10);
+										.attr("r", 4);
 										// .attr("r", function (d, i) { return 2 + d.EngineCylinders; })
 										// should aggregate them into hex grids then scale circle radius by number of checklists w/ an observation there.
 										// or should it be by number of individuals? Maybe some mix, but can't scale by both
