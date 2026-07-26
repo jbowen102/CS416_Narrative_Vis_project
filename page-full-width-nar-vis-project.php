@@ -31,7 +31,7 @@ get_header(); ?>
 
 							<script src='https://d3js.org/d3.v5.min.js'></script>
 
-							<svg width="400" height="400">
+							<svg width="1200" height="1200">
 
 							</svg>
 
@@ -42,51 +42,52 @@ get_header(); ?>
 
 								async function init() {
 
-									const plot_height = 200;
-									const plot_width = 200;
-									const margin = 50;
+									const plot_height = 1000;
+									const plot_width = 1000;
+									const margin = 70;
 
-									const mpg_data = await d3.csv("https://flunky.github.io/cars2017.csv", d3.autoType);
-									// const data = await d3.csv("/data/CS416_NVis_project/synthetic_migration_data.csv", d3.autoType);
+									// const mpg_data = await d3.csv("https://flunky.github.io/cars2017.csv", d3.autoType);
+									const stk_data = await d3.csv("/data/CS416_NVis_project/synthetic_migration_data.csv", d3.autoType);
 
-									const x = d3.scaleLog()
-										.domain([10, 150])
-										.range([0, plot_width])
-										.base(10);
+									const x = d3.scaleLinear()
+										.domain([-108, -50])
+										.range([0, plot_width]);
 
-									const y = d3.scaleLog()
-										.domain([10, 150])
-										.range([plot_height, 0])
-										.base(10);
+									const y = d3.scaleLinear()
+										.domain([-15, 40])
+										.range([plot_height, 0]);
 
 									d3.select("svg").append("g")
 										.attr("transform", "translate(" + margin + "," + margin + ")")
 										.selectAll("circle")
-										.data(mpg_data)
+										.data(stk_data)
 										.enter()
 										.append("circle")
 										.attr("fill", "royalblue")
 										.attr("stroke", "silver")
 										.transition().duration(2000)
-										.attr("cx", function (d) { return x(d.AverageCityMPG); })
+										.attr("cx", function (d) { return x(d.longitude); })
 										.transition().duration(2000)
-										.attr("cy", function (d) { return y(d.AverageHighwayMPG); })
-										.attr("r", function (d, i) { return 2 + d.EngineCylinders; });
+										.attr("cy", function (d) { return y(d.latitude); })
+										.attr("r", 10);
+										// .attr("r", function (d, i) { return 2 + d.EngineCylinders; })
+										// should aggregate them into hex grids then scale circle radius by number of checklists w/ an observation there.
+										// or should it be by number of individuals? Maybe some mix, but can't scale by both
 
 									// set up axes
 									d3.select("svg")
 										.append("g")
 										.attr("transform", "translate(" + margin + "," + margin + ")")
-										.call(d3.axisLeft(y)
-													.tickValues([10, 20, 50, 100])
-													.tickFormat(d3.format("~s")));
+										.call(d3.axisLeft(y));
+													// .tickValues([10, 20, 50, 100])
+													// .tickFormat(d3.format("~s")));
 
 									d3.select("svg")
 										.append("g")
 										.attr("transform", "translate(" + margin + "," + (plot_height + margin) + ")")
-										.call(d3.axisBottom(x)
-													.tickValues([10, 20, 50, 100])
-													.tickFormat(d3.format("~s")));
+										.call(d3.axisBottom(x));
+													// .tickValues([10, 20, 50, 100])
+													// .tickFormat(d3.format("~s")));
 								}
 
 
