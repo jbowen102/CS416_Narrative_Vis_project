@@ -7,7 +7,7 @@
 .databricks
 .DS_Store
 .editorconfig
-.vscode
+.work-folder-info
 
 # file types
 *.py[cod]
@@ -24,9 +24,13 @@
 *.png
 
 # dirs
-*.egg-info/
-.venv/
 __pycache__/
+*.egg-info/
+.stubs/
+.venv/
+.vfscache/
+.vfsmeta/
+.vscode/
 build/
 dist/
 import/
