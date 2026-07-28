@@ -14,81 +14,113 @@ get_header(); ?>
 			<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 
 			<header class="entry-header">
-					<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
+				<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
 			</header><!-- .entry-header -->
 
 			<div class="entry-content special-page-content">
 
 				<!-- custom HTML starts here -->
 
-				<p>Swallow-tailed Kite migration routes</p>
-
+				<script src='https://d3js.org/d3.v5.min.js'></script>
+				<!-- <style> circle {fill: royalblue; stroke: black;} </style> -->
 				<!-- <img src="<?php echo esc_url( content_url( '/uploads/2026/07/stk_mockup-300x300.png.webp' ) ); ?>" alt="Narrative visualization image" style="max-width:100%; height:auto; margin:1rem 0;" /> -->
 
-				<script src='https://d3js.org/d3.v5.min.js'></script>
+				<p>Swallow-tailed Kite migration routes</p>
 
-				<style> circle {fill: royalblue; stroke: black;} </style>
+                <div id="viz-wrapper">
 
-				<svg width="1200" height="1200">
+					<input id="week-slider" type="range" min="31" max="43" value="31">
+					<span id="week-label">Week 31</span>
+					</br>
+					<svg width="1200" height="1200">
 
-				</svg>
+					</svg>
 
-				<script>
+					<script>
+						window.addEventListener("load", init);
 
-					// In WordPress template JS, use window load event instead of <body onload="init()">
-					window.addEventListener('load', init);
+						let margin = 70;
+						let selectedWeek = 31;
+						d3.select("#week-label").text(`Week ${selectedWeek}`);
 
-					async function init() {
+						let stk_data;
+						let chartLayer;
+						const svg = d3.select("svg");
 
-						const plot_height = 1000;
-						const plot_width = 1000;
-						const margin = 70;
+						async function init() {
+							stk_data = await d3.csv("/data/CS416_NVis_project/swallow_tailed_kite_compl_20260726_zf_clean_agg_weekly.csv", d3.autoType);
 
-						// const mpg_data = await d3.csv("https://flunky.github.io/cars2017.csv", d3.autoType);
-						// const stk_data = await d3.csv("/data/CS416_NVis_project/synthetic_migration_data.csv", d3.autoType);
-						const stk_data = await d3.csv("/data/CS416_NVis_project/swallow_tailed_kite_20260725_clean.csv", d3.autoType);
+							const plot_height = 1000;
+							const plot_width = 1000;
 
-						const x = d3.scaleLinear()
-							.domain([-108, -50])
-							.range([0, plot_width]);
+							const x = d3.scaleLinear()
+								.domain([-109, -50])        // expanded longitude range by 1 degree West to un-crowd axis
+								.range([0, plot_width]);
 
-						const y = d3.scaleLinear()
-							.domain([-15, 40])
-							.range([plot_height, 0]);
+							const y = d3.scaleLinear()
+								.domain([-16, 40])          // expanded latitude range by 1 degree South to un-crowd axis
+								.range([plot_height, 0]);
 
-						d3.select("svg").append("g")
-							.attr("transform", "translate(" + margin + "," + margin + ")")
-							.selectAll("circle")
-							.data(stk_data)
-							.enter()
-							.append("circle")
-							.attr("stroke", "silver")
-							// .transition().duration(4000)
-							.attr("cx", function (d) { return x(d.longitude); })
-							// .transition().duration(4000)
-							.attr("cy", function (d) { return y(d.latitude); })
-							.attr("r", 4);
-							// .attr("r", function (d, i) { return 2 + d.EngineCylinders; })
+							chartLayer = svg.append("g")
+								.attr("transform", "translate(" + margin + "," + margin + ")");
 
-						// set up axes
-						d3.select("svg")
-							.append("g")
-							.attr("transform", "translate(" + margin + "," + margin + ")")
-							.call(d3.axisLeft(y));
-										// .tickValues([10, 20, 50, 100])
-										// .tickFormat(d3.format("~s")));
+							// set up axes
+							chartLayer.append("g")
+									.call(d3.axisLeft(y));
+							chartLayer.append("g")
+									.attr("transform", "translate(0," + plot_height + ")")
+									.call(d3.axisBottom(x));
 
-						d3.select("svg")
-							.append("g")
-							.attr("transform", "translate(" + margin + "," + (plot_height + margin) + ")")
-							.call(d3.axisBottom(x));
-										// .tickValues([10, 20, 50, 100])
-										// .tickFormat(d3.format("~s")));
-					}
+							d3.select("#week-slider")
+							.on("input", function () { selectedWeek = +this.value;
+														d3.select("#week-label").text(`Week ${selectedWeek}`);
+														updateChart(x, y);
+														}
+								);
+								// "this" refers to whatever DOM element triggered the event.
+								// "this.value" is the value of the slider (as str, so convert to number w/ +).
+
+							updateChart(x, y);
+
+						}
+
+						function updateChart(x, y) {
+							const weekData = stk_data.filter(d => Number(d.week) === selectedWeek);
+
+							const circles = chartLayer.selectAll("circle")
+								.data(weekData, d => d.cell);
+
+							circles.exit()
+								.transition()
+								.duration(300)
+								.style("opacity", 0)
+								.remove();
+
+							const enterCircles = circles.enter()
+								.append("circle")
+								.attr("cx", d => x(d.cell_ctr_lon))
+								.attr("cy", d => y(d.cell_ctr_lat))
+								.attr("r", 4)
+								.style("opacity", 0)
+								.attr("stroke", "black")
+								.attr("fill", "white");
+
+							enterCircles.merge(circles)
+								.attr("cx", d => x(d.cell_ctr_lon))
+								.attr("cy", d => y(d.cell_ctr_lat))
+								.attr("r", 4)
+								.transition()
+								.duration(300)
+								.style("opacity", 1)
+								.attr("fill", d => d.det_freq > 0 ? "royalblue" : "white")
+								.attr("stroke", "black");
+						}
 
 
 
-				</script>
+					</script>
+
+				</div> <!-- viz-wrapper -->
 
 				<!-- custom HTML ends here -->
 
