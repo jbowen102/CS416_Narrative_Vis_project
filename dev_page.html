@@ -12,8 +12,14 @@
 
                 <div id="viz-wrapper">
 
-                    <input id="week-slider" type="range" min="31" max="43" value="31">
-                    <span id="week-label">Week 31</span>
+                    <input id="week-slider" type="range" min="27" max="48" value="27">
+                    <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
+                    <span id="week-label">Week 27</span>
+
+                    <div id="species-pick">
+                        <label style="margin-right:12px;"><input type="checkbox" id="chk-stk" checked> Swallow-tailed Kite</label>
+                        <label><input type="checkbox" id="chk-bwh" checked> Broad-winged Hawk</label>
+                    </div>
                     </br>
                     <svg width="1200" height="1200">
 
@@ -23,29 +29,38 @@
                         window.addEventListener("load", init);
 
                         let margin = 70;
-                        let selectedWeek = 31;
+                        let selectedWeek = 27; // TODO  convert this to dynamic         
                         d3.select("#week-label").text(`Week ${selectedWeek}`);
 
-                        let stk_data;
+                        let data_stk;
+                        let data_bwh;
                         let chartLayer;
+                        let layerSTK;
+                        let layerBWH;
                         const svg = d3.select("svg");
 
                         async function init() {
-                            stk_data = await d3.csv("source_data_upload/CS416_NVis_project/swallow_tailed_kite_compl_20260726_zf_clean_agg_weekly.csv", d3.autoType);
+                            data_stk = await d3.csv("source_data_upload/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
+                            data_bwh = await d3.csv("source_data_upload/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
 
                             const plot_height = 1000;
                             const plot_width = 1000;
 
                             const x = d3.scaleLinear()
-                                .domain([-109, -50])        // expanded longitude range by 1 degree West to un-crowd axis
+                                .domain([-109, -50])        // TODO  make this dynamic based on the data, rather than hard-coded        
                                 .range([0, plot_width]);
-
-                            const y = d3.scaleLinear()
-                                .domain([-16, 40])          // expanded latitude range by 1 degree South to un-crowd axis
-                                .range([plot_height, 0]);
+                                // expanded longitude range by 1 degree West to un-crowd axis
+                                
+                                const y = d3.scaleLinear()
+                                .domain([-16, 40])         // TODO  make this dynamic based on the data, rather than hard-coded        
+                                .range([plot_height, 0]);// expanded latitude range by 1 degree South to un-crowd axis
 
                             chartLayer = svg.append("g")
                                 .attr("transform", "translate(" + margin + "," + margin + ")");
+
+                            // separate groups per species so both can be shown simultaneously
+                            layerSTK = chartLayer.append("g").attr("class", "layer-stk");
+                            layerBWH = chartLayer.append("g").attr("class", "layer-bwh");
 
                             // set up axes
                             chartLayer.append("g")
@@ -57,21 +72,42 @@
                             d3.select("#week-slider")
                             .on("input", function () { selectedWeek = +this.value;
                                                         d3.select("#week-label").text(`Week ${selectedWeek}`);
-                                                        updateChart(x, y);
+                                                        updateChart2(x, y);
                                                         }
                                 );
                                 // "this" refers to whatever DOM element triggered the event.
                                 // "this.value" is the value of the slider (as str, so convert to number w/ +).
 
-                            updateChart(x, y);
+                            // update when species selection changes
+                            d3.selectAll("#chk-stk, #chk-bwh").on("change", function() {
+                                updateChart2(x, y);
+                            });
+
+                            updateChart2(x, y);
 
                         }
 
                         function updateChart(x, y) {
-                            const weekData = stk_data.filter(d => Number(d.week) === selectedWeek);
+                            // assemble weekData from selected species
+                            const stkChecked = d3.select("#chk-stk").property("checked");
+                            const bwhChecked = d3.select("#chk-bwh").property("checked");
+
+                            let weekData = [];
+                            if (stkChecked && data_stk) {
+                                weekData = weekData.concat(
+                                    data_stk.filter(d => Number(d.week) === selectedWeek)
+                                        .map(d => Object.assign({}, d, { species: 'stk' }))
+                                );
+                            }
+                            if (bwhChecked && data_bwh) {
+                                weekData = weekData.concat(
+                                    data_bwh.filter(d => Number(d.week) === selectedWeek)
+                                        .map(d => Object.assign({}, d, { species: 'bwh' }))
+                                );
+                            }
 
                             const circles = chartLayer.selectAll("circle")
-                                .data(weekData, d => d.cell);
+                                .data(weekData, d => d.species + "-" + d.cell);
 
                             circles.exit()
                                 .transition()
@@ -85,8 +121,10 @@
                                 .attr("cy", d => y(d.cell_ctr_lat))
                                 .attr("r", 4)
                                 .style("opacity", 0)
-                                .attr("stroke", "black")
-                                .attr("fill", "white");
+                                .attr("stroke", "gainsboro")
+                                .attr("stroke-opacity", 0.3)
+                                .attr("fill", "none");
+                                // .attr("fill-opacity", d => d.det_freq);
 
                             enterCircles.merge(circles)
                                 .attr("cx", d => x(d.cell_ctr_lon))
@@ -95,8 +133,10 @@
                                 .transition()
                                 .duration(300)
                                 .style("opacity", 1)
-                                .attr("fill", d => d.det_freq > 0 ? "royalblue" : "white")
-                                .attr("stroke", "black");
+                                .attr("fill", d => d.det_freq > 0 ? (d.species === 'stk' ? "royalblue" : "orange") : "none")
+                                .attr("stroke", "gainsboro")
+                                .attr("stroke-opacity", 0.3);
+                                // .attr("fill-opacity", d => d.det_freq)
 
                             // svg.append("g")
                             //     .attr("transform", "translate(" + margin + "," + margin + ")")
@@ -104,13 +144,57 @@
                             //     .data(stk_data)
                             //     .enter()
                             //     .append("circle")
-                            //     .attr("fill", "white")
+                            //     .attr("fill", "none")
                             //     .attr("stroke", "black")
                             //     .attr("cx", function (d) { return x(d.cell_ctr_lon); })
                             //     .attr("cy", function (d) { return y(d.cell_ctr_lat); })
                             //     .attr("r", 4)
                             //     .transition().duration(4000)
-                            //     .attr("fill", function (d) { return (d.det_freq > 0 ? "royalblue" : "white") });
+                            //     .attr("fill", function (d) { return (d.det_freq > 0 ? "royalblue" : "none") });
+
+                        }
+                        
+                        // Render each species in its own layer so both are visible
+                        function updateChart2(x, y) {
+                            const stkChecked = d3.select("#chk-stk").property("checked");
+                            const bwhChecked = d3.select("#chk-bwh").property("checked");
+
+                            const stkWeek = stkChecked && data_stk ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
+                            const bwhWeek = bwhChecked && data_bwh ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
+
+                            // STK
+                            const stkSel = layerSTK.selectAll("circle").data(stkWeek, d => d.cell);
+                            stkSel.exit().transition().duration(300).style("opacity", 0).remove();
+                            const stkEnter = stkSel.enter().append("circle")
+                                .attr("cx", d => x(d.cell_ctr_lon))
+                                .attr("cy", d => y(d.cell_ctr_lat))
+                                .attr("r", 4)
+                                .style("opacity", 0)
+                                .attr("stroke", "gainsboro")
+								.attr("stroke-opacity", 0.3);
+                            stkEnter.merge(stkSel)
+                                .attr("cx", d => x(d.cell_ctr_lon))
+                                .attr("cy", d => y(d.cell_ctr_lat))
+                                .transition().duration(300)
+                                .style("opacity", 1)
+                                .attr("fill", d => d.det_freq > 0 ? "royalblue" : "none");
+
+                            // BWH
+                            const bwhSel = layerBWH.selectAll("circle").data(bwhWeek, d => d.cell);
+                            bwhSel.exit().transition().duration(300).style("opacity", 0).remove();
+                            const bwhEnter = bwhSel.enter().append("circle")
+                                .attr("cx", d => x(d.cell_ctr_lon))
+                                .attr("cy", d => y(d.cell_ctr_lat))
+                                .attr("r", 4)
+                                .style("opacity", 0)
+                                .attr("stroke", "gainsboro")
+								.attr("stroke-opacity", 0.3);
+                            bwhEnter.merge(bwhSel)
+                                .attr("cx", d => x(d.cell_ctr_lon))
+                                .attr("cy", d => y(d.cell_ctr_lat))
+                                .transition().duration(300)
+                                .style("opacity", 1)
+                                .attr("fill", d => d.det_freq > 0 ? "orange" : "none");
                         }
 
 
