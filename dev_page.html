@@ -51,6 +51,12 @@
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
+                        function colorScale(freq_range, color) {
+                            return d3.scaleLinear()
+                                .domain([0, d3.max(freq_range)])
+                                .range(['white', color])
+                        }
+
                         async function init() {
                             data_stk = await d3.csv("source_data_upload/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
                             data_bwh = await d3.csv("source_data_upload/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
@@ -107,6 +113,9 @@
                             const stkWeek = (stkChecked && data_stk) ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
                             const bwhWeek = (bwhChecked && data_bwh) ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
 
+                            let stkWeek_freq_range = [0, d3.max(stkWeek, d => d.det_freq) || 0];
+                            let bwhWeek_freq_range = [0, d3.max(bwhWeek, d => d.det_freq) || 0];
+
                             // STK
                             const stkSel = layerSTK.selectAll("circle")
                                                    .data(stkWeek, d => d.cell);
@@ -115,6 +124,7 @@
                                   .transition().ease(d3.easeCubicIn).duration(300)
                                   .style("opacity", 0)
                                   .remove();
+                                  // https://d3js.org/d3-ease
                             // new circles needed for new data points
                             // starting with invisible fill
                             const stkEnter = stkSel.enter()
@@ -125,7 +135,8 @@
                                                    .style("opacity", 0)
                                                    .attr("stroke", "gainsboro")
                                                    .attr("stroke-opacity", 0.3)
-                                                   .attr("fill", "royalblue")
+                                                // .attr("fill", "royalblue")
+                                                   .attr("fill", d => colorScale(stkWeek_freq_range, "royalblue")(d.det_freq))
                                                    .attr("fill-opacity", 0);
                             // now include circles that were already there AND in new data (so not exited)
                             stkEnter.merge(stkSel)
@@ -149,7 +160,8 @@
                                                    .style("opacity", 0)
                                                    .attr("stroke", "gainsboro")
                                                    .attr("stroke-opacity", 0.3)
-                                                   .attr("fill", "orange")
+                                                // .attr("fill", "orange")
+                                                   .attr("fill", d => colorScale(bwhWeek_freq_range, "orange")(d.det_freq))
                                                    .attr("fill-opacity", 0);
                             bwhEnter.merge(bwhSel)
                                     .attr("cx", d => x(d.cell_ctr_lon))
