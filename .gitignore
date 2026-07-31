@@ -62,6 +62,7 @@ dir_names.*
 img*
 *.csv
 *.[xX][lL][sS]*
+*data*/
 
 
 
