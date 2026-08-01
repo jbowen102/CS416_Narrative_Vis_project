@@ -1,12 +1,14 @@
 <html>
     <style>
-        /* body {
+        body {
             background: black;
             color: white;
-        } */
+        }
         path {
-            fill: lightgrey;
-            stroke: #000;
+            fill: rgb(51, 51, 51);
+            fill-opacity: 0.8;
+            stroke: lightgrey;
+            vector-effect: non-scaling-stroke; /* keeps borders readable while zooming */
         }
 
         .graticule {
@@ -21,45 +23,58 @@
             stroke-width: 1.5px;
         }
     </style>
-    <script src='https://d3js.org/d3.v5.min.js'></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src='https://unpkg.com/topojson-client@3'></script>
     
     <body>
         <svg width="960" height="600"></svg>
         <script>
             const svg = d3.select("svg");
-            const myProjection = d3.geoMercator()
-                            .center([(-108 + -50)/2, (-15 + 40)/2])
-                            .scale(530);
+            const projection = d3.geoMercator()
+                                 .center([(-108 + -50)/2, (-15 + 40)/2])
+                                 .scale(530);
             const path = d3.geoPath()
-                           .projection(myProjection);   
+                           .projection(projection);
             const graticule = d3.geoGraticule();
+
+            // Put all map shapes in a zoomable layer
+            const mapLayer = svg.append("g").attr("class", "map-layer");
 
             function drawMap(world) {
 
-                svg.append("path")
-                   .datum(graticule())
-                   .attr("class", "graticule")
-                   .attr("d", path);
+                mapLayer.append("path")
+                        .datum(graticule())
+                        .attr("class", "graticule")
+                        .attr("d", path);
 
-                svg.append("path")
-                   .datum(graticule.outline())
-                   .attr("class", "foreground")
-                   .attr("d", path);
+                mapLayer.append("path")
+                        .datum(graticule.outline())
+                        .attr("class", "foreground")
+                        .attr("d", path);
 
                 const countries = topojson.feature(world, world.objects.countries).features;
 
-                svg.append("g")
-                   .selectAll("path")
-                   .data(countries)
-                   .enter()
-                   .append("path")
-                   .attr("d", path);
+                mapLayer.append("g")
+                        .selectAll("path")
+                        .data(countries)
+                        .enter()
+                        .append("path")
+                        .attr("d", path);
             }
+            // Zoom + pan behavior
+            const zoom = d3.zoom()
+                           .scaleExtent([1, 8]) // min/max zoom
+                           .translateExtent([[0,0],[960,600]]) // limit panning to given area
+                           //  TODO  update to reflect area I have data for. Make sure it extends at least slightly outside the starting window
+                           .on("zoom", (event) => {
+                                  mapLayer.attr("transform", event.transform);
+                           });
 
-              d3.json("source_data/countries-50m.json")
-                .then(drawMap)
-                .catch(console.error);
+            svg.call(zoom);
+
+            d3.json("source_data/countries-50m.json")
+              .then(drawMap)
+              .catch(console.error);
         </script>
     </body>
 
