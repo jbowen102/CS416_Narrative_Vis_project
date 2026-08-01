@@ -31,143 +31,255 @@
             stroke-width: 1.5px;
         }
     </style>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src='https://unpkg.com/topojson-client@3'></script>
-    
-    <body>
-        <svg id="map"></svg>
-        <script>
-            window.addEventListener("load", init);
+    <div class="entry-content special-page-content">
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src='https://unpkg.com/topojson-client@3'></script>
 
-            const svg = d3.select("#map");
-            const svgWidth = 960;
-            const svgHeight = 600;
-            svg.attr("width", svgWidth).attr("height", svgHeight);
+        <p>Swallow-tailed Kite migration routes</p>
 
-            const mapLayer = svg.append("g").attr("class", "map-layer");  // zoomable layer
-            const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
+        <div id="viz-wrapper">
 
-            let graticule;
-            let path;
-            let projection;
-            let currentTransform = d3.zoomIdentity;
-            let lat_range;
-            let lon_range;
+            <input id="week-slider" type="range" min="27" max="48" value="27">
+            <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
+            <span id="week-label">Week 27</span>
 
-            function makeLabels() {
-                labelLayer.selectAll("*").remove();
+            <div id="species-pick">
+                <label style="margin-right:12px;"><input type="checkbox" id="chk-stk" checked> Swallow-tailed Kite</label>
+                <label><input type="checkbox" id="chk-bwh" checked> Broad-winged Hawk</label>
+            </div>
+            </br>
 
-                const lonValues = d3.range(Math.ceil(lon_range[0] / 10) * 10, lon_range[1] + 1, 10);
-                const lonLabels = lonValues.map(lon => {
-                    const p = projection([lon, lat_range[0]]);
-                    return p ? { text: `${lon}°`, x: p[0], y: p[1] + 45, anchor: "middle" } : null;
-                    // return p ? { text: `${lon}°`, x: p[0], y: p[1] + 14, anchor: "middle" } : null;
-                }).filter(Boolean);
+            <svg id="map"></svg>
+            <script>
+                window.addEventListener("load", init);
 
-                labelLayer.selectAll(".lon-label")
-                          .data(lonLabels)
-                          .enter()
-                          .append("text")
-                          .attr("class", "graticule-label lon-label")
-                          .attr("data-x", d => d.x)
-                          .attr("data-y", d => d.y)
-                          .attr("text-anchor", "middle")
-                          .text(d => d.text);
+                const svg = d3.select("#map");
+                const svgWidth = 960;
+                const svgHeight = 600;
+                svg.attr("width", svgWidth)
+                .attr("height", svgHeight);
+                const map_scale = 530;
 
-                const latValues = d3.range(Math.ceil(lat_range[0] / 10) * 10, lat_range[1] + 1, 10);
-                const latLabels = latValues.map(lat => {
-                    const p = projection([lon_range[0], lat]);
-                    return p ? { text: `${lat}°`, x: p[0] - 100, y: p[1] - 5, anchor: "end" } : null;
-                    // return p ? { text: `${lat}°`, x: p[0] - 6, y: p[1] + 4, anchor: "end" } : null;
-                }).filter(Boolean);
+                const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
+                const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
+                const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
 
-                labelLayer.selectAll(".lat-label")
-                          .data(latLabels)
-                          .enter()
-                          .append("text")
-                          .attr("class", "graticule-label lat-label")
-                          .attr("data-x", d => d.x)
-                          .attr("data-y", d => d.y)
-                          .attr("text-anchor", "end")
-                          .text(d => d.text);
-            }
+                let graticule;
+                let path;
+                let projection;
+                let currentTransform = d3.zoomIdentity;
+                let lat_range;
+                let lon_range;
 
-            function updateLabelTransform() {
-                const k = currentTransform.k || 1;
-                labelLayer.selectAll("text")
-                          .attr("transform", function () {
-                              const x = +this.getAttribute("data-x");
-                              const y = +this.getAttribute("data-y");
-                              return `translate(${currentTransform.applyX(x)}, ${currentTransform.applyY(y)})`;
-                });
-            }
+                let selectedWeek;
+                let data_stk;
+                let data_bwh;
+                let layerSTK;
+                let layerBWH;
 
-            async function init() {
-                const data_stk = await d3.csv("source_data_upload/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
+                function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
-                lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
-                lon_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lon));
-                const centerLon = (lon_range[0]-1 + lon_range[1]) / 2;
-                const centerLat = (lat_range[0]-1 + lat_range[1]) / 2;
+                function colorScale(freq_range, color) {
+                    return d3.scaleLinear()
+                             .domain([0, d3.max(freq_range)])
+                             .range(['white', color])
+                }
 
-                projection = d3.geoMercator()
-                               .center([centerLon, centerLat])
-                               .scale(530);
-                path = d3.geoPath()
-                         .projection(projection);
-                graticule = d3.geoGraticule();
+                async function init() {
+                    data_stk = await d3.csv("source_data_upload/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
+                    data_bwh = await d3.csv("source_data_upload/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
 
-                // zoom and pan
-                const zoom = d3.zoom()
-                               .scaleExtent([1, 8]) // min/max zoom
-                               .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
-                               .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
-                               // TODO  update to reflect area I have data for. Make sure it extends at least slightly outside the starting window
-                               .on("zoom", (event) => {
-                                    currentTransform = event.transform;
-                                    mapLayer.attr("transform", currentTransform);
-                                    updateLabelTransform();
-                               });
+                    selectedWeek = d3.min(data_stk, d => d.week + 1);
+                    d3.select("#week-label").text(`Week ${selectedWeek}`);
 
-                svg.call(zoom);
+                    lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
+                    lon_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lon));
+                    const centerLon = (lon_range[0]-1 + lon_range[1]) / 2;
+                    const centerLat = (lat_range[0]-1 + lat_range[1]) / 2;
 
-                d3.json("source_data/countries-50m.json")
-                    .then(drawMap)
-                    .catch(console.error);
+                    projection = d3.geoMercator()
+                                   .center([centerLon, centerLat])
+                                   .scale(map_scale);
+                    path = d3.geoPath()
+                             .projection(projection);
+                    graticule = d3.geoGraticule();
 
-                // for label creation
-                window.lon_range = lon_range;
-                window.lat_range = lat_range;
+                    // instead of a d3 "scale" function, using a projection to map lat/lon to pixels
+                    const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
+                    const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
 
-                makeLabels();
-                updateLabelTransform();
+                    // each species on its own layer
+                    layerSTK = dataLayer.append("g").attr("class", "layer-stk");
+                    layerBWH = dataLayer.append("g").attr("class", "layer-bwh");
 
-            }
+                    // update when date selection changes
+                    d3.select("#week-slider")
+                      .on("input", function() { selectedWeek = +this.value;
+                                                d3.select("#week-label").text(`Week ${selectedWeek}`);
+                                                updateChart(x, y) });
+                                // "this" refers to whatever DOM element triggered the event.
+                                // "this.value" is the value of the slider (as str, so convert to number w/ +).
 
-            function drawMap(world) {
+                    // update when species selection changes
+                    d3.selectAll("#chk-stk, #chk-bwh")
+                      .on("change", function() { updateChart(x, y); });
 
-                mapLayer.append("path")
-                        .datum(graticule())
-                        .attr("class", "graticule")
-                        .attr("d", path);
+                    updateChart(x, y);
 
-                mapLayer.append("path")
-                        .datum(graticule.outline())
-                        .attr("class", "foreground")
-                        .attr("d", path);
+                    // zoom and pan
+                    const zoom = d3.zoom()
+                                   .scaleExtent([1, 8]) // min/max zoom
+                                   .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
+                                   .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
+                                   // TODO  update to reflect area I have data for. Make sure it extends at least slightly outside the starting window
+                                   .on("zoom", (event) => {
+                                           currentTransform = event.transform;
+                                           mapLayer.attr("transform", currentTransform);
+                                           updateLabelTransform();
+                                   });
 
-                const countries = topojson.feature(world, world.objects.countries).features;
+                    svg.call(zoom);
 
-                mapLayer.append("g")
-                        .selectAll("path")
-                        .data(countries)
-                        .enter()
-                        .append("path")
-                        .attr("d", path);
-            }
-        </script>
-    </body>
+                    d3.json("source_data/countries-50m.json")
+                      .then(drawMap)
+                      .catch(console.error);
+
+                    makeLabels(lat_range, lon_range);
+                    updateLabelTransform();
+
+                }
+
+                function updateChart(x, y) {
+                    const stkChecked = d3.select("#chk-stk").property("checked");
+                    const bwhChecked = d3.select("#chk-bwh").property("checked");
+
+                    const stkWeek = (stkChecked && data_stk) ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
+                    const bwhWeek = (bwhChecked && data_bwh) ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
+
+                    let stkWeek_freq_range = [0, d3.max(stkWeek, d => d.det_freq) || 0];
+                    let bwhWeek_freq_range = [0, d3.max(bwhWeek, d => d.det_freq) || 0];
+
+                    // STK
+                    const stkSel = layerSTK.selectAll("circle")
+                                           .data(stkWeek, d => d.cell);
+                    // Transition out the points no longer in the data
+                    stkSel.exit()
+                          .transition().ease(d3.easeCubicIn).duration(300)
+                          .style("opacity", 0)
+                          .remove();
+                          // https://d3js.org/d3-ease
+                    // new circles needed for new data points
+                    // starting with invisible fill
+                    const stkEnter = stkSel.enter()
+                                           .append("circle")
+                                           .attr("cx", d => x(d))
+                                           .attr("cy", d => y(d))
+                                           .attr("r", 4)
+                                           .style("opacity", 0)
+                                           .attr("stroke", "gainsboro")
+                                           .attr("stroke-opacity", 0.3)
+                                           .attr("fill", "royalblue")
+                                        // .attr("fill", d => colorScale(stkWeek_freq_range, "royalblue")(d.det_freq))
+                                           .attr("fill-opacity", 0);
+                    // now include circles that were already there AND in new data (so not exited)
+                    stkEnter.merge(stkSel)
+                            .transition().ease(d3.easeCubicOut).duration(300)
+                            .style("opacity", 1)
+                            .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0);
+
+                    // BWH
+                    const bwhSel = layerBWH.selectAll("circle")
+                                           .data(bwhWeek, d => d.cell);
+                    bwhSel.exit()
+                          .transition().ease(d3.easeCubicIn).duration(300)
+                          .style("opacity", 0)
+                          .remove();
+
+                    const bwhEnter = bwhSel.enter()
+                                           .append("circle")
+                                           .attr("cx", d => x(d))
+                                           .attr("cy", d => y(d))
+                                           .attr("r", 4)
+                                           .style("opacity", 0)
+                                           .attr("stroke", "gainsboro")
+                                           .attr("stroke-opacity", 0.3)
+                                           .attr("fill", "orange")
+                                        // .attr("fill", d => colorScale(bwhWeek_freq_range, "orange")(d.det_freq))
+                                           .attr("fill-opacity", 0);
+                    bwhEnter.merge(bwhSel)
+                            .transition().ease(d3.easeCubicOut).duration(300)
+                            .style("opacity", 1)
+                            .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0);
+                }
 
 
+                function makeLabels(lat_range, lon_range) {
+                    labelLayer.selectAll("*").remove();
+
+                    const lonValues = d3.range(Math.ceil(lon_range[0] / 10) * 10, lon_range[1] + 1, 10);
+                    const lonLabels = lonValues.map(lon => {
+                        const p = projection([lon, lat_range[0]]);
+                        return p ? { text: `${lon}°`, x: p[0], y: p[1] + 45, anchor: "middle" } : null;
+                        // return p ? { text: `${lon}°`, x: p[0], y: p[1] + 14, anchor: "middle" } : null;
+                    }).filter(Boolean);
+
+                    labelLayer.selectAll(".lon-label")
+                              .data(lonLabels)
+                              .enter()
+                              .append("text")
+                              .attr("class", "graticule-label lon-label")
+                              .attr("data-x", d => d.x)
+                              .attr("data-y", d => d.y)
+                              .attr("text-anchor", "middle")
+                              .text(d => d.text);
+
+                    const latValues = d3.range(Math.ceil(lat_range[0] / 10) * 10, lat_range[1] + 1, 10);
+                    const latLabels = latValues.map(lat => {
+                        const p = projection([lon_range[0], lat]);
+                        return p ? { text: `${lat}°`, x: p[0] - 100, y: p[1] - 5, anchor: "end" } : null;
+                        // return p ? { text: `${lat}°`, x: p[0] - 6, y: p[1] + 4, anchor: "end" } : null;
+                    }).filter(Boolean);
+
+                    labelLayer.selectAll(".lat-label")
+                              .data(latLabels)
+                              .enter()
+                              .append("text")
+                              .attr("class", "graticule-label lat-label")
+                              .attr("data-x", d => d.x)
+                              .attr("data-y", d => d.y)
+                              .attr("text-anchor", "end")
+                              .text(d => d.text);
+                }
+
+                function updateLabelTransform() {
+                    const k = currentTransform.k || 1;
+                    labelLayer.selectAll("text")
+                              .attr("transform", function () {
+                                  const x = +this.getAttribute("data-x");
+                                  const y = +this.getAttribute("data-y");
+                                  return `translate(${currentTransform.applyX(x)}, ${currentTransform.applyY(y)})`;
+                    });
+                }
+
+                function drawMap(world) {
+
+                    mapLayer.append("path")
+                            .datum(graticule())
+                            .attr("class", "graticule")
+                            .attr("d", path);
+
+                    const countries = topojson.feature(world, world.objects.countries).features;
+
+                    mapLayer.append("g")
+                            .selectAll("path")
+                            .data(countries)
+                            .enter()
+                            .append("path")
+                            .attr("d", path);
+                }
+            </script>
+
+        </div> <!-- viz-wrapper -->
+    </div> <!-- entry-content -->
 </html>
 <!-- Started from this example: https://medium.com/@amy.degenaro/introduction-to-digital-cartography-geojson-and-d3-js-c27f066aa84 -->
