@@ -1,0 +1,65 @@
+<html>
+    <style>
+        /* body {
+            background: black;
+            color: white;
+        } */
+        path {
+            fill: lightgrey;
+            stroke: #000;
+        }
+
+        .graticule {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: .5px;
+        }
+
+        .foreground {
+            fill: none;
+            stroke: #333;
+            stroke-width: 1.5px;
+        }
+    </style>
+    <script src='https://d3js.org/d3.v5.min.js'></script>
+    <script src='https://unpkg.com/topojson-client@3'></script>
+    
+    <body>
+        <svg width="960" height="600"></svg>
+        <script>
+            const svg = d3.select("svg");
+            const myProjection = d3.geoNaturalEarth1();
+            const path = d3.geoPath().projection(myProjection);
+            const graticule = d3.geoGraticule();
+
+            function drawMap(world) {
+
+                svg.append("path")
+                   .datum(graticule())
+                   .attr("class", "graticule")
+                   .attr("d", path);
+
+                svg.append("path")
+                   .datum(graticule.outline())
+                   .attr("class", "foreground")
+                   .attr("d", path);
+
+                const countries = topojson.feature(world, world.objects.countries).features;
+
+                svg.append("g")
+                   .selectAll("path")
+                   .data(countries)
+                   .enter()
+                   .append("path")
+                   .attr("d", path);
+            }
+
+              d3.json("source_data/countries-50m.json")
+                .then(drawMap)
+                .catch(console.error);
+        </script>
+    </body>
+
+
+</html>
+<!-- Based on example from here: https://medium.com/@amy.degenaro/introduction-to-digital-cartography-geojson-and-d3-js-c27f066aa84 -->
