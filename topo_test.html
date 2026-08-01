@@ -27,18 +27,49 @@
     <script src='https://unpkg.com/topojson-client@3'></script>
     
     <body>
-        <svg width="960" height="600"></svg>
+        <svg id="map"></svg>
         <script>
-            const svg = d3.select("svg");
-            const projection = d3.geoMercator()
-                                 .center([(-108 + -50)/2, (-15 + 40)/2])
-                                 .scale(530);
-            const path = d3.geoPath()
-                           .projection(projection);
-            const graticule = d3.geoGraticule();
+            window.addEventListener("load", init);
 
-            // Put all map shapes in a zoomable layer
-            const mapLayer = svg.append("g").attr("class", "map-layer");
+            const svg = d3.select("#map");
+            const svgWidth = 960;      // fixed
+            const svgHeight = 600;     // fixed
+            svg.attr("width", svgWidth).attr("height", svgHeight);
+
+            const mapLayer = svg.append("g").attr("class", "map-layer");  // zoomable layer
+            let graticule;
+            let path;
+
+            async function init() {
+                data_stk = await d3.csv("source_data_upload/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
+
+                const lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
+                const lon_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lon));
+                const centerLon = (lon_range[0]-1 + lon_range[1]) / 2;
+                const centerLat = (lat_range[0]-1 + lat_range[1]) / 2;
+
+                const projection = d3.geoMercator()
+                                     .center([centerLon, centerLat])
+                                     .scale(530);
+                path = d3.geoPath()
+                         .projection(projection);
+                graticule = d3.geoGraticule();
+
+                // Zoom + pan behavior
+                const zoom = d3.zoom()
+                               .scaleExtent([1, 8]) // min/max zoom
+                               .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
+                               .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
+                               .on("zoom", (event) => {
+                                       mapLayer.attr("transform", event.transform);
+                               });
+
+                svg.call(zoom);
+
+                d3.json("source_data/countries-50m.json")
+                    .then(drawMap)
+                    .catch(console.error);
+            }
 
             function drawMap(world) {
 
@@ -61,23 +92,9 @@
                         .append("path")
                         .attr("d", path);
             }
-            // Zoom + pan behavior
-            const zoom = d3.zoom()
-                           .scaleExtent([1, 8]) // min/max zoom
-                           .translateExtent([[0,0],[960,600]]) // limit panning to given area
-                           //  TODO  update to reflect area I have data for. Make sure it extends at least slightly outside the starting window
-                           .on("zoom", (event) => {
-                                  mapLayer.attr("transform", event.transform);
-                           });
-
-            svg.call(zoom);
-
-            d3.json("source_data/countries-50m.json")
-              .then(drawMap)
-              .catch(console.error);
         </script>
     </body>
 
 
 </html>
-<!-- Based on example from here: https://medium.com/@amy.degenaro/introduction-to-digital-cartography-geojson-and-d3-js-c27f066aa84 -->
+<!-- Started from this example: https://medium.com/@amy.degenaro/introduction-to-digital-cartography-geojson-and-d3-js-c27f066aa84 -->
