@@ -10,6 +10,11 @@
             stroke: lightgrey;
             vector-effect: non-scaling-stroke;
         }
+        .data-hex {
+            stroke: gainsboro;
+            stroke-opacity: 0.3;
+            vector-effect: non-scaling-stroke;
+        }
         circle {
             vector-effect: non-scaling-stroke;
         }
@@ -71,6 +76,23 @@
                         const map_scale = 530;
                         const basePointRadius = 4;
 
+                        // const spacingKm = 50; // spacing in km used with dggridr::dgconstruct()
+                        // const baseHexArea = (Math.sqrt(3) / 2) * spacingKm * spacingKm;
+                        const baseHexRadiusPx = 6;
+                        // const hexSymbol = d3.symbol().type(d3.symbolHexagon); // seems to note be included in this d3 build. Using custom function below instead.
+                        function makeHexPath(radius) {
+                            const points = d3.range(6).map(i => {
+                                const angle = (Math.PI / 3) * i - Math.PI / 6;
+                                return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+                            });
+
+                            const p = d3.path();
+                            p.moveTo(points[0][0], points[0][1]);
+                            for (let i = 1; i < points.length; i++) p.lineTo(points[i][0], points[i][1]);
+                            p.closePath();
+                            return p.toString();
+                        }
+
                         const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
                         const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
                         const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
@@ -126,16 +148,6 @@
                             layerSTK = dataLayer.append("g").attr("class", "layer-stk");
                             layerBWH = dataLayer.append("g").attr("class", "layer-bwh");
 
-                            // chartLayer = svg.append("g")
-                            //                 .attr("transform", translation_str(margin_axes, margin_axes));
-                            // // set up axes
-                            // chartLayer.append("g")
-                            //           .attr("transform", translation_str(0, 0))
-                            //           .call(d3.axisLeft(y));
-                            // chartLayer.append("g")
-                            //           .attr("transform", translation_str(0, plot_height))
-                            //           .call(d3.axisBottom(x));
-
                             // update when date selection changes
                             d3.select("#week-slider")
                               .on("input", function() { selectedWeek = +this.value;
@@ -160,7 +172,8 @@
                                                 currentTransform = event.transform;
                                                 mapLayer.attr("transform", currentTransform);
                                                 dataLayer.attr("transform", currentTransform);
-                                                updatePointSizes();
+                                                // updatePointSizes();
+                                                updateHexSizes();
                                                 updateLabelTransform();
                                         });
 
@@ -187,7 +200,8 @@
                             let bwhWeek_freq_range = [0, d3.max(bwhWeek, d => d.det_freq) || 0];
 
                             // STK
-                            const stkSel = layerSTK.selectAll("circle")
+                            // const stkSel = layerSTK.selectAll("circle")
+                            const stkSel = layerSTK.selectAll(".data-hex")
                                                    .data(stkWeek, d => d.cell);
                             // Transition out the points no longer in the data
                             stkSel.exit()
@@ -198,10 +212,15 @@
                             // new circles needed for new data points
                             // starting with invisible fill
                             const stkEnter = stkSel.enter()
-                                                   .append("circle")
-                                                   .attr("cx", d => x(d))
-                                                   .attr("cy", d => y(d))
-                                                   .attr("r", basePointRadius / (currentTransform.k || 1))
+                                                // .append("circle")
+                                                // .attr("cx", d => x(d))
+                                                // .attr("cy", d => y(d))
+                                                // .attr("r", basePointRadius / (currentTransform.k || 1))
+                                                   .append("path")
+                                                   .attr("class", "data-hex stk-hex")
+                                                   .attr("transform", d => `translate(${x(d)}, ${y(d)})`)
+                                                // .attr("d", hexSymbol.size(baseHexArea / ((currentTransform.k || 1) ** 2)))
+                                                   .attr("d", () => makeHexPath(baseHexRadiusPx / (currentTransform.k || 1)))
                                                    .style("opacity", 0)
                                                    .attr("stroke", "gainsboro")
                                                    .attr("stroke-opacity", 0.3)
@@ -215,7 +234,8 @@
                                     .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0);
 
                             // BWH
-                            const bwhSel = layerBWH.selectAll("circle")
+                            // const bwhSel = layerBWH.selectAll("circle")
+                            const bwhSel = layerBWH.selectAll(".data-hex")
                                                    .data(bwhWeek, d => d.cell);
                             bwhSel.exit()
                                   .transition().ease(d3.easeCubicIn).duration(300)
@@ -223,10 +243,16 @@
                                   .remove();
 
                             const bwhEnter = bwhSel.enter()
-                                                   .append("circle")
-                                                   .attr("cx", d => x(d))
-                                                   .attr("cy", d => y(d))
-                                                   .attr("r", basePointRadius / (currentTransform.k || 1))
+                                                // .append("circle")
+                                                // .attr("cx", d => x(d))
+                                                // .attr("cy", d => y(d))
+                                                // .attr("r", basePointRadius / (currentTransform.k || 1))
+                                                   .append("path")
+                                                   .attr("class", "data-hex stk-hex")
+                                                   .attr("transform", d => `translate(${x(d)}, ${y(d)})`)
+                                                // .attr("d", hexSymbol.size(baseHexArea / ((currentTransform.k || 1) ** 2)))
+                                                // .attr("d", () => makeHexPath(baseHexArea / ((currentTransform.k || 1) ** 2)))
+                                                   .attr("d", () => makeHexPath(baseHexRadiusPx / (currentTransform.k || 1)))
                                                    .style("opacity", 0)
                                                    .attr("stroke", "gainsboro")
                                                    .attr("stroke-opacity", 0.3)
@@ -291,6 +317,12 @@
                             const k = currentTransform.k || 1;
                             dataLayer.selectAll("circle")
                                      .attr("r", basePointRadius / k);
+                        }
+
+                        function updateHexSizes() {
+                            const k = currentTransform.k || 1;
+                            dataLayer.selectAll(".data-hex")
+                                     .attr("d", () => makeHexPath(baseHexRadiusPx / k));
                         }
 
                         function drawMap(world) {
