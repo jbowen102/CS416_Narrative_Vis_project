@@ -28,9 +28,11 @@
         <svg width="960" height="600"></svg>
         <script>
             const svg = d3.select("svg");
-            // const myProjection = d3.geoNaturalEarth1();
-            const myProjection = d3.geoMercator();
-            const path = d3.geoPath().projection(myProjection);
+            const myProjection = d3.geoMercator()
+                            .center([(-108 + -50)/2, (-15 + 40)/2])
+                            .scale(530);
+            const path = d3.geoPath()
+                           .projection(myProjection);   
             const graticule = d3.geoGraticule();
 
             function drawMap(world) {
