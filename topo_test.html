@@ -28,7 +28,8 @@
         <svg width="960" height="600"></svg>
         <script>
             const svg = d3.select("svg");
-            const myProjection = d3.geoNaturalEarth1();
+            // const myProjection = d3.geoNaturalEarth1();
+            const myProjection = d3.geoMercator();
             const path = d3.geoPath().projection(myProjection);
             const graticule = d3.geoGraticule();
 
