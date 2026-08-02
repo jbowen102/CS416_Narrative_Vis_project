@@ -8,6 +8,11 @@
 <!--  -->
 <!--  -->
 <html>
+    <!--  -->
+    <!--  -->
+    <!--  -->
+    <!--  -->
+    <!--  -->
     <style>
         body {
             background: black;
@@ -163,7 +168,7 @@
                 <script src='https://unpkg.com/topojson-client@3'></script>
                 <!-- <style> circle {fill: royalblue; stroke: black;} </style> -->
 
-                <p>Migration routes</p>
+                <p>Comparing Raptor Fall Migration Preferences</p>
 
                 <div id="viz-wrapper">
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
@@ -289,11 +294,17 @@
 
                         function showTooltip(event, d) {
                             const fmt = d3.format(".3f");
+                            const mskVisible = d3.select("#chk-msk").property("checked");
+                            const ospVisible = d3.select("#chk-osp").property("checked");
+                            const speciesLines = [
+                                mskVisible ? `Mississippi Kite reported: ${d.det_freq_msk > 0 ? "Yes" : "No"}<br/>` : "",
+                                ospVisible ? `Osprey reported: ${d.det_freq_osp > 0 ? "Yes" : "No"}<br/>` : ""
+                            ].join("");
+
                             tooltip.html(` <strong>${fmt(d.cell_ctr_lat)}°, ${fmt(d.cell_ctr_lon)}°</strong><br/>
                                            Country (primary): ${d.country_code}<br/>
                                            Complete checklists: ${d.n_checklists}<br/>
-                                           Mississippi Kite present: ${d.det_freq_msk > 0 ? "Yes" : "No"}<br/>
-                                           Osprey present: ${d.det_freq_osp > 0 ? "Yes" : "No"}<br/>
+                                           ${speciesLines}
                                            `).style("opacity", 0.85);
                                         // Checklists w/ species: ${d.n_detected}<br/>
                                         // Cumulative # reported: ${d.tot_observed}<br/>
@@ -332,7 +343,7 @@
                                 lat: 12.031, lon: -86.599,
                                 dx: -17, dy: 18,
                                 title: "",
-                                label: "Mississippi kite"
+                                label: "Mississippi Kite"
                             },
                             {
                                 id: "ex-neither",
