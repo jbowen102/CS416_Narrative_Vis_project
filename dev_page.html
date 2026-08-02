@@ -86,6 +86,10 @@
             .narrative-button-fwd.is-explore {
                 background: #666;
             }
+            .narrative-button-fwd:disabled {
+                background: #666;
+                cursor: not-allowed;
+            }
         .narrative-button-reset {
             position: absolute;
             top: 30px;
@@ -98,6 +102,10 @@
             background: #936fff98;
             color: white;
             cursor: pointer;
+        }
+        .narrative-button-reset.is-disabled {
+            background: #666;
+            cursor: not-allowed;
         }
         .annotation-group .connector,
         .annotation-group .note-line {
@@ -161,7 +169,7 @@
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
                         Start Exploring
                     </button>
-                    <button id="narr-reset" class="narrative-button-reset" type="button">
+                    <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
                         Reset
                     </button>
 
@@ -522,6 +530,7 @@
                             // Lock interactive controls until narrative intro completes.
                             setControlsLocked(true);
                             setMapInteractionLocked(true);
+                            setResetButtonLocked(true);
 
                             // Show intro note immediately; map annotation stays hidden until button click.
                             activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
@@ -533,6 +542,7 @@
                                 if (currentStep === 0) {
                                     // Optional: prevent double-click during animation
                                     d3.select(this).property("disabled", true);
+                                    setResetButtonLocked(false);
 
                                     // Clear intro annotations first (optional, but cleaner)
                                     await showAnnotations({ sidebar: [], map: [] });
@@ -746,6 +756,12 @@
                             if (locked) hideTooltip();
                         }
 
+                        function setResetButtonLocked(locked) {
+                            d3.select("#narr-reset")
+                              .property("disabled", locked)
+                              .classed("is-disabled", locked);
+                        }
+
                         function sleep(ms) {
                             return new Promise(resolve => setTimeout(resolve, ms));
                         }
@@ -900,6 +916,7 @@
 
                             setControlsLocked(true); // lock out free exploration again
                             setMapInteractionLocked(true);
+                            setResetButtonLocked(true);
                         }
 
                         // Render each species in its own layer so both are visible
