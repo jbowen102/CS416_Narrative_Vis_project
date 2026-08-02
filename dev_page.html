@@ -490,8 +490,9 @@
 
                         function resetVisualization() {
                             // Reset controls to their initial values.
-                            d3.select("#week-slider").property("value", firstWeek);
-                            d3.select("#week-label").text(`Week ${firstWeek}`);
+                            selectedWeek = firstWeek;
+                            d3.select("#week-slider").property("value", selectedWeek);
+                            d3.select("#week-label").text(`Week ${selectedWeek}`);
                             d3.select("#chk-stk").property("checked", true);
                             d3.select("#chk-bwh").property("checked", true);
 
