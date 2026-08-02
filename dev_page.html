@@ -451,7 +451,16 @@
                                 title: "",
                                 label: "Mississippi kites travel in groups over land instead of crossing the Gulf or Caribbean in their journey to South America.",
                                 wrap: 160
+                            },
+                            {
+                                id: "msk-explanation-note",
+                                x: 20,
+                                y: svgHeight / 2 - 30,
+                                title: "",
+                                label: "These raptors rely on air currents (\"thermals\") that form over land to help them travel; they are unable to sustain powered flight for long enough to cross this much open water.",
+                                wrap: 160
                             }
+
                         ];
 
                         let activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
@@ -633,7 +642,7 @@
 
                                     // 3) Add scene 5 annotations.
                                     await showAnnotations({
-                                        sidebar: ["msk-no-detections-note"],
+                                        sidebar: ["msk-no-detections-note", "msk-explanation-note"],
                                         map: ["msk-no-detections"]
                                     });
 
