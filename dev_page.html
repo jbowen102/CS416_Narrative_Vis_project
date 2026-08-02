@@ -79,7 +79,7 @@
             padding: 6px 10px;
             border: 1px solid #999;
             border-radius: 4px;
-            background: #134607;
+            background: #12eb219c;
             color: white;
             cursor: pointer;
         }
@@ -92,7 +92,7 @@
             padding: 6px 10px;
             border: 1px solid #999;
             border-radius: 4px;
-            background: #502020;
+            background: #936fff98;
             color: white;
             cursor: pointer;
         }
@@ -351,6 +351,13 @@
                                 dx: -70, dy: 25,
                                 title: "",
                                 label: "[no data]"
+                            },
+                            {
+                                id: "msk-breeding-ground",
+                                lat: 34.75, lon: -90.0,
+                                dx: 200, dy: 50,
+                                title: "",
+                                label: "Mississippi Kite breeding grounds"
                             }
                         ];
                         let activeMapAnnotationIds = [];
@@ -375,7 +382,7 @@
                             {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 120,
+                                y: svgHeight / 2 - 140,
                                 title: "INTRO",
                                 label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
                                 wrap: 160
@@ -383,7 +390,7 @@
                             {
                                 id: "hex-presence-note",
                                 x: 20,
-                                y: svgHeight / 2 - 20,
+                                y: svgHeight / 2 - 40,
                                 title: "",
                                 label: "A missing cell outline indicates no checklists were collected in that area this week.",
                                 wrap: 160
@@ -391,7 +398,7 @@
                             {
                                 id: "hover-note",
                                 x: 20,
-                                y: svgHeight / 2 + 60,
+                                y: svgHeight / 2 + 40,
                                 title: "",
                                 label: "Hover over each cell to see more details.",
                                 wrap: 160
@@ -399,9 +406,17 @@
                             {
                                 id: "zoom-pan-note",
                                 x: 20,
-                                y: svgHeight / 2 + 110,
+                                y: svgHeight / 2 + 90,
                                 title: "",
                                 label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-breeding-note",
+                                x: 20,
+                                y: svgHeight / 8 - 20,
+                                title: "",
+                                label: "Mississippi kites breed in the central/southern US during the warmer months.",
                                 wrap: 160
                             }
                         ];
@@ -493,13 +508,53 @@
                                     });
 
                                     d3.select(this).text("Next").property("disabled", false);
-                                    // updateChart(x, y);
-                                    setControlsLocked(false);
+                                    // Keep data controls locked until the final scene.
+                                    setControlsLocked(true);
                                     setMapInteractionLocked(false);
                                     currentStep = 1;
                                 }
 
-                                // else if (currentStep === 1) { ... }
+                                else if (currentStep === 1) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep everything locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 2 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Zoom all the way back out.
+                                    await svg.transition()
+                                             .duration(1000)
+                                             .call(zoomBehavior.transform, d3.zoomIdentity)
+                                             .end()
+                                             .catch(() => {});
+
+                                    // 3) Move week slider back to week 33.
+                                    await animateWeekSlider(33);
+                                    await sleep(700);
+
+                                    // 4) Show only Mississippi kite data.
+                                    d3.select("#chk-msk").property("checked", true);
+                                    d3.select("#chk-osp").property("checked", false);
+                                    updateChart(x, y);
+
+                                    await sleep(300);
+                                    // 5) Add final scene annotations.
+                                    await showAnnotations({
+                                        sidebar: ["msk-breeding-note"],
+                                        map: ["msk-breeding-ground"]
+                                    });
+
+                                    // Final scene reached: unlock controls and map interactions.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 2;
+
+                                    d3.select(this).text("Explore Freely").property("disabled", true);
+                                }
 
                                 // Add more steps here as you build out the narrative.
 
@@ -742,7 +797,7 @@
                             showAnnotations({ sidebar: ["intro-note", "guided-int-note"],
                                               map: [] });
 
-                            d3.select("#narr-forward").text("Start Exploring"); // reset button text
+                            d3.select("#narr-forward").text("Start Exploring").property("disabled", false); // reset button text
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
