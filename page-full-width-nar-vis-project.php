@@ -288,10 +288,15 @@ get_header(); ?>
                         const wrapper = d3.select("#viz-wrapper");
                         const tooltip = wrapper.select("#tooltip");
 
+                        function setSpeciesSelection(mskChecked, ospChecked) {
+                            wrapper.select("#chk-msk").property("checked", mskChecked);
+                            wrapper.select("#chk-osp").property("checked", ospChecked);
+                        }
+
                         function showTooltip(event, d) {
                             const fmt = d3.format(".3f");
-                            const mskVisible = d3.select("#chk-msk").property("checked");
-                            const ospVisible = d3.select("#chk-osp").property("checked");
+                            const mskVisible = wrapper.select("#chk-msk").property("checked");
+                            const ospVisible = wrapper.select("#chk-osp").property("checked");
                             const speciesLines = [
                                 mskVisible ? `Mississippi Kite reported: ${d.det_freq_msk > 0 ? "Yes" : "No"}<br/>` : "",
                                 ospVisible ? `Osprey reported: ${d.det_freq_osp > 0 ? "Yes" : "No"}<br/>` : ""
@@ -532,6 +537,9 @@ get_header(); ?>
                             d3.selectAll("#chk-msk, #chk-osp")
                               .on("change", function() { updateChart(x, y); });
 
+                            // Force initial species state for consistency across browser/page restores.
+                            setSpeciesSelection(true, true);
+
                             updateChart(x, y);
 
                             // Lock interactive controls until narrative intro completes.
@@ -596,8 +604,7 @@ get_header(); ?>
                                     await sleep(700);
 
                                     // 4) Show only Mississippi kite data.
-                                    d3.select("#chk-msk").property("checked", true);
-                                    d3.select("#chk-osp").property("checked", false);
+                                    setSpeciesSelection(true, false);
                                     updateChart(x, y);
 
                                     await sleep(300);
@@ -901,8 +908,7 @@ get_header(); ?>
                             selectedWeek = firstWeek;
                             d3.select("#week-slider").property("value", selectedWeek);
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
-                            d3.select("#chk-msk").property("checked", true);
-                            d3.select("#chk-osp").property("checked", true);
+                            setSpeciesSelection(true, true);
 
                             const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
                             const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
@@ -927,8 +933,8 @@ get_header(); ?>
 
                         // Render each species in its own layer so both are visible
                         function updateChart(x, y) {
-                            const mskChecked = d3.select("#chk-msk").property("checked");
-                            const ospChecked = d3.select("#chk-osp").property("checked");
+                            const mskChecked = wrapper.select("#chk-msk").property("checked");
+                            const ospChecked = wrapper.select("#chk-osp").property("checked");
 
                             const mskWeek = (mskChecked && data_msk) ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
                             const ospWeek = (ospChecked && data_osp) ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
