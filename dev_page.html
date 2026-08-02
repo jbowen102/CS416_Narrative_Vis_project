@@ -274,6 +274,8 @@
                         let layerBWH;
                         let zoomBehavior;
 
+                        let currentStep = 0; // intro
+
                         const mapAnnotationDefs = [
                             {
                                 id: "florida-hotspot",
@@ -366,13 +368,22 @@
                             updateMapAnnotation();
 
                             d3.select("#narr-forward").on("click", function() {
-                                showAnnotations({ sidebar: [],
-                                                  map: ["florida-hotspot"] });
-                                d3.select(this).text("Next"); // change button text
+                                if (currentStep === 0) {
+                                        showAnnotations({ sidebar: [],
+                                                    map: ["florida-hotspot"] });
+                                    d3.select(this).text("Next"); // change button text
 
-                                // more steps
+                                    // Zoom in on first-step area of focus
+                                    const floridaDef = mapAnnotationDefs.find(a => a.id === "florida-hotspot");
+                                    zoomToLonLat(floridaDef.lon + 10, floridaDef.lat, 1.5);
 
-                                setControlsLocked(false); // narrative complete — unlock free exploration
+                                    setControlsLocked(false); // narrative complete — unlock free exploration
+                                    currentStep = 1;
+                                }
+
+                                // else if (currentStep === 1) { /* step 2 logic */ currentStep = 2; }
+                                // Add more steps here as you build out the narrative.
+
                             });
 
                             d3.select("#narr-reset").on("click", resetVisualization);
@@ -398,6 +409,27 @@
                             makeLabels(lat_range, lon_range);
                             updateLabelTransform();
 
+                        }
+
+                        function clampTransform(transform) {
+                            const [[x0, y0], [x1, y1]] = [[0, 0], [mapWidth, mapHeight]];
+                            const k = transform.k;
+                            const tx = Math.min(0, Math.max(mapWidth - x1 * k, transform.x));
+                            const ty = Math.min(0, Math.max(mapHeight - y1 * k, transform.y));
+                            return d3.zoomIdentity.translate(tx, ty).scale(k);
+                        }
+
+                        function zoomToLonLat(lon, lat, scale, duration = 750) {
+                            const [px, py] = projection([lon, lat]);
+                            const rawTransform = d3.zoomIdentity
+                                                   .translate(mapWidth / 2, mapHeight / 2)
+                                                   .scale(scale)
+                                                   .translate(-px, -py);
+                            const targetTransform = clampTransform(rawTransform);
+
+                            svg.transition()
+                               .duration(duration)
+                               .call(zoomBehavior.transform, targetTransform);
                         }
 
                         function setControlsLocked(locked) {
@@ -528,6 +560,7 @@
                                               map: [] });
 
                             d3.select("#narr-forward").text("Start Exploring"); // reset button text
+                            currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
                         }
