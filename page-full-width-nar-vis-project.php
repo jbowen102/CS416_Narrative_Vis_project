@@ -17,18 +17,11 @@ get_header(); ?>
                 #viz-wrapper {
                     position: relative;
                 }
-                .tooltip {
-                    position: absolute;
+                .map-border {
+                    fill: none;
+                    stroke: #999;
+                    stroke-width: 1.5px;
                     pointer-events: none;
-                    opacity: 0;
-                    background: rgba(0, 0, 0, 0.85);
-                    color: white;
-                    padding: 8px 10px;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    line-height: 1.4;
-                    z-index: 1000;
-                    white-space: nowrap;
                 }
                 .map-path {
                     fill: rgb(51, 51, 51);
@@ -40,6 +33,7 @@ get_header(); ?>
                     stroke: gainsboro;
                     stroke-opacity: 0.3;
                     vector-effect: non-scaling-stroke;
+                    pointer-events: all;
                 }
                 .graticule {
                     fill: none;
@@ -56,6 +50,104 @@ get_header(); ?>
                     stroke: #333;
                     stroke-width: 1.5px;
                 }
+                .tooltip {
+                    position: absolute;
+                    pointer-events: none;
+                    opacity: 0;
+                    background: rgba(0, 0, 0, 0.85);
+                    color: white;
+                    padding: 8px 10px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    line-height: 1.4;
+                    z-index: 1000;
+                    white-space: nowrap;
+                }
+                #week-slider:disabled,
+                #species-pick input:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+                .control-wrap {
+                    display: inline-block;
+                }
+                .narrative-button-fwd {
+                    position: absolute;
+                    top: 0;
+                    left: 500px; /* mapWidth, aligns button above the sidebar */
+                    width: 200px; /* sidebarWidth */
+                    margin: 0;
+                    padding: 6px 10px;
+                    border: 1px solid #999;
+                    border-radius: 4px;
+                    background: #12eb219c;
+                    color: white;
+                    cursor: pointer;
+                }
+                    .narrative-button-fwd.is-explore {
+                        background: #666;
+                    }
+                    .narrative-button-fwd:disabled {
+                        background: #666;
+                        cursor: not-allowed;
+                    }
+                .narrative-button-reset {
+                    position: absolute;
+                    top: 30px;
+                    width: 80px;
+                    left: calc(500px + 200px - 80px); /* mapWidth + sidebarWidth - button width */
+                    margin: 0;
+                    padding: 6px 10px;
+                    border: 1px solid #999;
+                    border-radius: 4px;
+                    background: #936fff98;
+                    color: white;
+                    cursor: pointer;
+                }
+                .narrative-button-reset.is-disabled {
+                    background: #666;
+                    cursor: not-allowed;
+                }
+                .annotation-group .connector,
+                .annotation-group .note-line {
+                    stroke: white;
+                    stroke-width: 2;
+                    fill: none;
+                    vector-effect: non-scaling-stroke;
+                }
+                .annotation-group .annotation-note-label,
+                .annotation-group .annotation-note-title {
+                    fill: white;
+                    font-family: sans-serif;
+                }
+                .annotation-group .annotation-note-label {
+                    font-size: 12px;
+                }
+                .annotation-group .annotation-note-title {
+                    font-size: 13px;
+                    font-weight: bold;
+                }
+                .annotation-group .annotation-note-bg {
+                    fill: rgba(0, 0, 0, 0.85);
+                    stroke: none;
+                    rx: 6px;
+                }
+                .annotation-group .connector-end {
+                    stroke: white;
+                    fill: none;
+                }
+                .annotation-group .subject {
+                    fill: #ff7f0e;
+                    stroke: none;
+                }
+                .sidebar-citation {
+                    fill: #999;
+                    font-family: sans-serif;
+                    font-size: 12px;
+                }
+                #map-interaction-blocker {
+                    cursor: not-allowed;
+                }
             </style>
 
 			<header class="entry-header">
@@ -67,20 +159,31 @@ get_header(); ?>
 				<!-- custom HTML starts here -->
 
                 <script src="https://d3js.org/d3.v7.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js" integrity="sha512-iBAeBWWWFb8HqSBcrqcz98iIpuVH1la39dEYHtyQ/pGpeCQTQVvLJOWAuhv2Q7JSHp9k7hWA7sGxU3hHJe+tFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                 <script src='https://unpkg.com/topojson-client@3'></script>
-				<!-- <img src="<?php echo esc_url( content_url( '/uploads/2026/07/stk_mockup-300x300.png.webp' ) ); ?>" alt="Narrative visualization image" style="max-width:100%; height:auto; margin:1rem 0;" /> -->
 
-				<p>Migration routes</p>
+				<p>Comparing Raptor Fall Migration Preferences</p>
 
                 <div id="viz-wrapper">
+                    <button id="narr-forward" class="narrative-button-fwd" type="button">
+                        Start Exploring
+                    </button>
+                    <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
+                        Reset
+                    </button>
 
-                    <input id="week-slider" type="range" min="27" max="48" value="27">
-
+                    <div class="control-wrap" id="week-slider-wrap">
+                        <input id="week-slider" type="range" min="27" max="48" value="27">
+                    </div>
                     <span id="week-label">Week 27</span>
 
                     <div id="species-pick">
-                        <label style="margin-right:12px;"><input type="checkbox" id="chk-stk" checked> Swallow-tailed Kite</label>
-                        <label><input type="checkbox" id="chk-bwh" checked> Broad-winged Hawk</label>
+                        <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
+                            <label style="margin-right:12px;"><input type="checkbox" id="chk-msk" checked> Mississippi Kite</label>
+                        </span>
+                        <span class="control-wrap" id="chk-osp-wrap" style="display: inline-block;">
+                            <label><input type="checkbox" id="chk-osp" checked> Osprey</label>
+                        </span>
                     </div>
                     </br>
 
@@ -92,13 +195,16 @@ get_header(); ?>
                         const dataDir = "/data/CS416_NVis_project";
 
                         const svg = d3.select("#map");
-                        const svgWidth = 500;
+                        const sidebarWidth = 200;
+                        const mapWidth = 500;
+                        const svgWidth = mapWidth + sidebarWidth;
                         const svgHeight = 550;
+                        const mapHeight = svgHeight;
                         svg.attr("width", svgWidth)
                            .attr("height", svgHeight);
 
                         const map_scale = 530;
-                        const latMapOffset = 23;  // shift map leftward in SVG window
+                        const latMapOffset = 26;  // shift map leftward in SVG window
                         const vertMapOffset = 5;  // shift map downward in SVG window
                         const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
                         const hexRadiusKm = hexSpacingKm / 2;
@@ -127,8 +233,53 @@ get_header(); ?>
                         const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
                         const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
                         const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
+                        const mapAnnotationLayer = dataLayer.append("g").attr("class", "map-annotation-layer");
 
-                        const latLabelShift = 55;  // shift latitude-line labels rightward (pixels)
+                        // Border around the map viewport
+                        svg.append("rect")
+                           .attr("class", "map-border")
+                           .attr("x", 0).attr("y", 0)
+                           .attr("width", mapWidth).attr("height", mapHeight);
+
+                        // Transparent overlay to block all map interactions until narrative unlocks.
+                        const mapInteractionBlocker = svg.append("rect")
+                                                         .attr("id", "map-interaction-blocker")
+                                                         .attr("x", 0)
+                                                         .attr("y", 0)
+                                                         .attr("width", mapWidth)
+                                                         .attr("height", mapHeight)
+                                                         .attr("fill", "transparent")
+                                                         .style("pointer-events", "all");
+
+                        // Static sidebar — NOT part of the zoom/pan transform
+                        const sidebarLayer = svg.append("g")
+                                                .attr("class", "sidebar-layer")
+                                                .attr("transform", `translate(${mapWidth}, 0)`);
+                        sidebarLayer.append("rect")
+                                    .attr("class", "sidebar-bg")
+                                    .attr("width", sidebarWidth)
+                                    .attr("height", svgHeight)
+                                    .attr("fill", "black");
+                        const sidebarAnnotationLayer = sidebarLayer.append("g").attr("class", "sidebar-annotation-layer");
+
+                        const citationText = [
+                            "eBird Basic Dataset.",
+                            "Version: EBD_relMar-2026.",
+                            "Cornell Lab of Ornithology",
+                            "Ithaca, New York. Mar 2026."
+                        ];
+
+                        const citationGroup = sidebarLayer.append("g")
+                                                           .attr("class", "sidebar-citation")
+                                                           .attr("transform", `translate(20, ${svgHeight - 45})`);
+                        citationGroup.selectAll("text")
+                                     .data(citationText)
+                                     .enter()
+                                     .append("text")
+                                     .attr("y", (d, i) => i * 12)
+                                     .text(d => d);
+
+                        const latLabelShift = 70;  // shift latitude-line labels rightward (pixels)
                         const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
 
                         const wrapper = d3.select("#viz-wrapper");
@@ -136,13 +287,21 @@ get_header(); ?>
 
                         function showTooltip(event, d) {
                             const fmt = d3.format(".3f");
+                            const mskVisible = d3.select("#chk-msk").property("checked");
+                            const ospVisible = d3.select("#chk-osp").property("checked");
+                            const speciesLines = [
+                                mskVisible ? `Mississippi Kite reported: ${d.det_freq_msk > 0 ? "Yes" : "No"}<br/>` : "",
+                                ospVisible ? `Osprey reported: ${d.det_freq_osp > 0 ? "Yes" : "No"}<br/>` : ""
+                            ].join("");
+
                             tooltip.html(` <strong>${fmt(d.cell_ctr_lat)}°, ${fmt(d.cell_ctr_lon)}°</strong><br/>
                                            Country (primary): ${d.country_code}<br/>
                                            Complete checklists: ${d.n_checklists}<br/>
-                                           Checklists w/ species: ${d.n_detected}<br/>
-                                           Cumulative # reported: ${d.tot_observed}<br/>
+                                           ${speciesLines}
                                            `).style("opacity", 0.85);
-                                           //    Checklists w/ species: ${Math.round(d.det_freq*100)}%<br/>
+                                        // Checklists w/ species: ${d.n_detected}<br/>
+                                        // Cumulative # reported: ${d.tot_observed}<br/>
+                                        // Checklists w/ species: ${Math.round(d.det_freq*100)}%<br/>
 
                             const [x, y] = d3.pointer(event, wrapper.node());
                             tooltip.style("left", `${x + 12}px`)
@@ -160,11 +319,163 @@ get_header(); ?>
                         let lat_range;
                         let lon_range;
 
+                        let firstWeek;
                         let selectedWeek;
-                        let data_stk;
-                        let data_bwh;
-                        let layerSTK;
-                        let layerBWH;
+                        let data_msk;
+                        let data_osp;
+                        let layerMSK;
+                        let layerOSP;
+                        let zoomBehavior;
+
+                        let currentStep = 0; // intro
+                        let isMapInteractionLocked = true;
+
+                        const mapAnnotationDefs = [
+                            {
+                                id: "ex-mississippi-kite",
+                                lat: 12.031, lon: -86.599,
+                                dx: -17, dy: 18,
+                                title: "",
+                                label: "Mississippi Kite"
+                            },
+                            {
+                                id: "ex-neither",
+                                lat: 9.659, lon: -73.688,
+                                dx: -5, dy: -38,
+                                title: "",
+                                label: "neither"
+                            },
+                            {
+                                id: "ex-osprey",
+                                lat: 6.027, lon: -77.698,
+                                dx: -65, dy: 30 ,
+                                title: "",
+                                label: "Osprey"
+                            },
+
+                            {
+                                id: "ex-both",
+                                lat: 9.261, lon: -84.068,
+                                dx: -40, dy: 20,
+                                title: "",
+                                label: "both"
+                            },
+                            {
+                                id: "ex-no-data",
+                                lat: -3.638, lon: -76.122,
+                                dx: -70, dy: 25,
+                                title: "",
+                                label: "[no data]"
+                            },
+                            {
+                                id: "msk-breeding-ground",
+                                lat: 34.75, lon: -90.0,
+                                dx: 200, dy: 50,
+                                title: "",
+                                label: "Mississippi Kite breeding grounds"
+                            },
+                            {
+                                id: "msk-overland-migration",
+                                lat: 17.253, lon: -91.001,
+                                dx: 200, dy: -100,
+                                title: "",
+                                label: "Overland migration begins"
+                            },
+                            {
+                                id: "msk-no-detections",
+                                lat: 20.649, lon: -76.149,
+                                dx: 80, dy: -65,
+                                title: "",
+                                label: "No detections"
+                            }
+                        ];
+                        let activeMapAnnotationIds = [];
+
+                        // Sidebar: positioned by fixed x/y within the sidebar. No connector/subject.
+                        const sidebarAnnotationDefs = [
+                            {
+                                id: "intro-note",
+                                x: 20,
+                                y: 10,
+                                title: "Welcome",
+                                label: "Click 'Start Exploring' to see how these two raptor species migrate each Fall.",
+                                wrap: 160
+                            },
+                            {
+                                id: "guided-int-note",
+                                x: 20,
+                                y: 90,
+                                label: "Map and data controls will be unlocked after guided portion.",
+                                wrap: 160
+                            },
+                            {
+                                id: "color-scale-note",
+                                x: 20,
+                                y: svgHeight / 2 - 140,
+                                title: "INTRO",
+                                label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
+                                wrap: 160
+                            },
+                            {
+                                id: "hex-presence-note",
+                                x: 20,
+                                y: svgHeight / 2 - 40,
+                                title: "",
+                                label: "A missing cell outline indicates no checklists were collected in that area this week.",
+                                wrap: 160
+                            },
+                            {
+                                id: "hover-note",
+                                x: 20,
+                                y: svgHeight / 2 + 40,
+                                title: "",
+                                label: "Hover over each cell to see more details.",
+                                wrap: 160
+                            },
+                            {
+                                id: "zoom-pan-note",
+                                x: 20,
+                                y: svgHeight / 2 + 90,
+                                title: "",
+                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-breeding-note",
+                                x: 20,
+                                y: svgHeight / 8 - 20,
+                                title: "",
+                                label: "Mississippi kites breed in the central/southern US during the warmer months.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-overland-note",
+                                x: 20,
+                                y: svgHeight / 8 + 20,
+                                title: "",
+                                label: "Mississippi kites start flying south, clearly following a land route through Central America.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-no-detections-note",
+                                x: 20,
+                                y: svgHeight / 8 + 65,
+                                title: "",
+                                label: "Mississippi kites travel in groups over land instead of crossing the Gulf or Caribbean in their journey to South America.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-explanation-note",
+                                x: 20,
+                                y: svgHeight / 2 - 30,
+                                title: "",
+                                label: "These raptors rely on air currents (\"thermals\") that form over land to help them travel; they are unable to sustain powered flight for long enough to cross this much open water.",
+                                wrap: 160
+                            }
+
+                        ];
+
+                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -175,14 +486,15 @@ get_header(); ?>
                         }
 
                         async function init() {
-                            data_stk = await d3.csv(`${dataDir}/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
-                            data_bwh = await d3.csv(`${dataDir}/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_osp = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
 
-                            selectedWeek = d3.min(data_stk, d => d.week + 1);
+                            firstWeek = d3.min(data_msk, d => d.week + 1);
+                            selectedWeek = firstWeek;
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
 
-                            lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
-                            lon_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lon));
+                            lat_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lat));
+                            lon_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lon));
                             // https://observablehq.com/@d3/d3-extent
                             const centerLon = latMapOffset + (lon_range[0]-1 + lon_range[1]) / 2;
                             const centerLat = vertMapOffset + (lat_range[0]-1 + lat_range[1]) / 2;
@@ -201,8 +513,8 @@ get_header(); ?>
                             const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
 
                             // each species on its own layer
-                            layerSTK = dataLayer.append("g").attr("class", "layer-stk");
-                            layerBWH = dataLayer.append("g").attr("class", "layer-bwh");
+                            layerMSK = dataLayer.append("g").attr("class", "layer-msk");
+                            layerOSP = dataLayer.append("g").attr("class", "layer-osp");
 
                             // update when date selection changes
                             d3.select("#week-slider")
@@ -214,24 +526,172 @@ get_header(); ?>
                                 // "this.value" is the value of the slider (as str, so convert to number w/ +).
 
                             // update when species selection changes
-                            d3.selectAll("#chk-stk, #chk-bwh")
+                            d3.selectAll("#chk-msk, #chk-osp")
                               .on("change", function() { updateChart(x, y); });
 
                             updateChart(x, y);
 
-                            // zoom and pan
-                            const zoom = d3.zoom()
-                                           .scaleExtent([1, 4]) // min/max zoom
-                                           .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
-                                           .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
-                                           .on("zoom", (event) => {
-                                                   currentTransform = event.transform;
-                                                   mapLayer.attr("transform", currentTransform);
-                                                   dataLayer.attr("transform", currentTransform);
-                                                   updateLabelTransform();
-                                           });
+                            // Lock interactive controls until narrative intro completes.
+                            setControlsLocked(true);
+                            setMapInteractionLocked(true);
+                            setResetButtonLocked(true);
 
-                            svg.call(zoom);
+                            // Show intro note immediately; map annotation stays hidden until button click.
+                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
+                            activeMapAnnotationIds = [];
+                            updateSidebarAnnotation();
+                            updateMapAnnotation();
+
+                            d3.select("#narr-forward").on("click", async function() {
+                                if (currentStep === 0) {
+                                    // Optional: prevent double-click during animation
+                                    d3.select(this).property("disabled", true);
+                                    setResetButtonLocked(false);
+
+                                    // Clear intro annotations first (optional, but cleaner)
+                                    await showAnnotations({ sidebar: [], map: [] });
+
+                                    // 1) week slider
+                                    await animateWeekSlider(42, 1500);
+
+                                    // 2) zoom
+                                    await zoomToLonLat(-85, 5, 1.9, 2500);
+
+                                    // 3) annotations
+                                    await showAnnotationsStaggered({
+                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                        map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
+                                    });
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                    // Keep data controls locked until the final scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 1;
+                                }
+
+                                else if (currentStep === 1) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep everything locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 2 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Zoom all the way back out.
+                                    await svg.transition()
+                                             .duration(1000)
+                                             .call(zoomBehavior.transform, d3.zoomIdentity)
+                                             .end()
+                                             .catch(() => {});
+
+                                    // 3) Move week slider back to week 30.
+                                    await animateWeekSlider(30);
+                                    await sleep(700);
+
+                                    // 4) Show only Mississippi kite data.
+                                    d3.select("#chk-msk").property("checked", true);
+                                    d3.select("#chk-osp").property("checked", false);
+                                    updateChart(x, y);
+
+                                    await sleep(300);
+                                    // 5) Add final scene annotations.
+                                    await showAnnotations({
+                                        sidebar: ["msk-breeding-note"],
+                                        map: ["msk-breeding-ground"]
+                                    });
+
+                                    // Final scene reached: unlock controls and map interactions.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 2;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 2) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 3 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Move week slider slowly to week 34.
+                                    await animateWeekSlider(34, 2600);
+
+                                    // 3) Add scene 4 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["msk-overland-note"],
+                                        map: ["msk-overland-migration"]
+                                    });
+
+                                    // Unlock again after arriving in scene 4.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 3;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 3) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 4 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Move week slider slowly to week 40.
+                                    await animateWeekSlider(40, 2600);
+
+                                    // 3) Add scene 5 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["msk-no-detections-note", "msk-explanation-note"],
+                                        map: ["msk-no-detections"]
+                                    });
+
+                                    // Unlock after arriving in scene 5.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 4;
+
+                                    d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
+                                }
+
+                                // Add more steps here as you build out the narrative.
+
+
+                            });
+
+                            d3.select("#narr-reset").on("click", resetVisualization);
+
+                            // zoom and pan
+                            zoomBehavior = d3.zoom()
+                                             .filter((event) => {
+                                                 if (isMapInteractionLocked) return false;
+                                                 return (!event.ctrlKey || event.type === "wheel") && !event.button;
+                                             })
+                                             .scaleExtent([1, 4]) // min/max zoom
+                                             .extent([[0, 0], [mapWidth, mapHeight]]) // define the area in which zooming is allowed
+                                             .translateExtent([[0,0],[mapWidth, mapHeight]]) // limit panning to given area
+                                             .on("zoom", (event) => {
+                                                     currentTransform = event.transform;
+                                                     mapLayer.attr("transform", currentTransform);
+                                                     dataLayer.attr("transform", currentTransform);
+                                                     updateLabelTransform();
+                                             });
+
+                            svg.call(zoomBehavior);
 
                             d3.json(`${dataDir}/countries-50m.json`) // from https://github.com/topojson/world-atlas
                               .then(drawMap)
@@ -242,15 +702,235 @@ get_header(); ?>
 
                         }
 
+                        function animateWeekSlider(targetWeek, duration = 700) {
+                            const slider = d3.select("#week-slider");
+                            const start = +slider.property("value");
+                            const end = +targetWeek;
+                            const interp = d3.interpolateNumber(start, end);
+
+                            // Drive slider + existing input handler
+                            return d3.transition()
+                                     .duration(duration)
+                                     .tween("week-slider", () => t => {
+                                         const v = Math.round(interp(t));
+                                         slider.property("value", v).dispatch("input");
+                                     })
+                                     .end()
+                                     .catch(() => {});
+                        }
+
+                        function clampTransform(transform) {
+                            const [[x0, y0], [x1, y1]] = [[0, 0], [mapWidth, mapHeight]];
+                            const k = transform.k;
+                            const tx = Math.min(0, Math.max(mapWidth - x1 * k, transform.x));
+                            const ty = Math.min(0, Math.max(mapHeight - y1 * k, transform.y));
+                            return d3.zoomIdentity.translate(tx, ty).scale(k);
+                        }
+
+                        function zoomToLonLat(lon, lat, scale, duration = 750) {
+                            const [px, py] = projection([lon, lat]);
+                            const rawTransform = d3.zoomIdentity
+                                                   .translate(mapWidth / 2, mapHeight / 2)
+                                                   .scale(scale)
+                                                   .translate(-px, -py);
+                            const targetTransform = clampTransform(rawTransform);
+
+                            return svg.transition()
+                                      .duration(duration)
+                                      .call(zoomBehavior.transform, targetTransform)
+                                      .end()
+                                      .catch(() => {});
+                        }
+
+                        function setControlsLocked(locked) {
+                            const lockMsg = "Complete narrative steps to unlock this control";
+
+                            d3.select("#week-slider").property("disabled", locked);
+                            d3.select("#chk-msk").property("disabled", locked);
+                            d3.select("#chk-osp").property("disabled", locked);
+
+                            d3.select("#week-slider-wrap").attr("title", locked ? lockMsg : "Select observations for a given week");
+                            d3.select("#chk-msk-wrap").attr("title", locked ? lockMsg : "Toggle Mississippi Kite observations on/off");
+                            d3.select("#chk-osp-wrap").attr("title", locked ? lockMsg : "Toggle Osprey observations on/off");
+                        }
+
+                        function setMapInteractionLocked(locked) {
+                            isMapInteractionLocked = locked;
+                            mapInteractionBlocker.style("display", locked ? null : "none");
+                            if (locked) hideTooltip();
+                        }
+
+                        function setResetButtonLocked(locked) {
+                            d3.select("#narr-reset")
+                              .property("disabled", locked)
+                              .classed("is-disabled", locked);
+                        }
+
+                        function sleep(ms) {
+                            return new Promise(resolve => setTimeout(resolve, ms));
+                        }
+
+                        function updateMapAnnotation() {
+                            if (!projection) return Promise.resolve();
+
+                            const activeDefs = mapAnnotationDefs.filter(a => activeMapAnnotationIds.includes(a.id));
+                            const connectorEndScale = 3;
+
+                            const annotations = activeDefs.map(a => {
+                                const [x, y] = projection([a.lon, a.lat]);
+                                return {
+                                    note: {
+                                        label: a.label,
+                                        title: a.title || undefined,
+                                        wrap: a.wrap ?? 160,
+                                        padding: a.small ? 4 : 10,
+                                        align: a.align ?? "dynamic"
+                                    },
+                                    x, y,
+                                    dx: a.dx, dy: a.dy,
+                                    connector: { end: "dot", endScale: connectorEndScale },
+                                    subject: { radius: 5 }
+                                };
+                            });
+
+                            const makeAnnotations = d3.annotation()
+                                                      .type(d3.annotationLabel)
+                                                      .annotations(annotations);
+
+                            mapAnnotationLayer.selectAll(".annotation-group")
+                                              .transition().duration(300)
+                                              .style("opacity", 0)
+                                              .remove();
+
+                            if (!annotations.length) return Promise.resolve();
+                            const newGroup = mapAnnotationLayer.append("g")
+                                              .attr("class", "annotation-group")
+                                              .style("opacity", 0)
+                                              .call(makeAnnotations);
+
+                            mapAnnotationLayer.raise(); // keep annotations above hex grid
+                            newGroup.transition()
+                                    .duration(600)
+                                    .style("opacity", 1)
+                                    .end()
+                                    .catch(() => {});
+
+                        }
+
+                        async function showAnnotationsStaggered(
+                            { map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {},
+                            delayMs = 1500
+                        ) {
+                            activeMapAnnotationIds = map;
+                            activeSidebarAnnotationIds = sidebar;
+
+                            // Sidebar first
+                            await updateSidebarAnnotation();
+
+                            // Then map after delay
+                            await sleep(delayMs);
+                            await updateMapAnnotation();
+                        }
+
+                        function updateSidebarAnnotation() {
+                            const activeDefs = sidebarAnnotationDefs.filter(a => activeSidebarAnnotationIds.includes(a.id));
+
+                            const annotations = activeDefs.map(a => ({
+                                note: {
+                                    label: a.label,
+                                    title: a.title || undefined,
+                                    wrap: a.wrap ?? 160,
+                                    padding: 10,
+                                    align: "left"
+                                },
+                                x: a.x, y: a.y,
+                                dx: 0, dy: 0
+                            }));
+
+                            const makeAnnotations = d3.annotation()
+                                                      .type(d3.annotationLabel)
+                                                      .disable(["connector", "subject"])
+                                                      .annotations(annotations);
+
+                            sidebarAnnotationLayer.selectAll(".annotation-group")
+                                                  .transition()
+                                                  .duration(300)
+                                                  .style("opacity", 0)
+                                                  .remove();
+
+                            if (!annotations.length) return Promise.resolve();
+
+                            const newGroup = sidebarAnnotationLayer.append("g")
+                                                  .attr("class", "annotation-group")
+                                                  .style("opacity", 0)
+                                                  .call(makeAnnotations);
+
+                            return newGroup.transition()
+                                           .duration(300)
+                                           .style("opacity", 1)
+                                           .end()
+                                           .catch(() => {});
+                        }
+
+                        function showAnnotations({ map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {}) {
+                            activeMapAnnotationIds = map;
+                            activeSidebarAnnotationIds = sidebar;
+                            return Promise.all([updateMapAnnotation(), updateSidebarAnnotation()]);
+                        }
+
+                        function hideAnnotations() {
+                            mapAnnotationLayer.selectAll("*").remove();
+                            sidebarAnnotationLayer.selectAll("*").remove();
+                        }
+
+                        // Example step runner: week -> zoom -> annotations
+                        async function runNarrativeStep(step) {
+                            await animateWeekSlider(step.week, 700);
+                            await zoomToLonLat(step.lon, step.lat, step.scale, 800);
+                            await showAnnotationsStaggered({
+                                sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
+                            }, 2000);
+                        }
+
+                        function resetVisualization() {
+                            // Reset controls to their initial values.
+                            selectedWeek = firstWeek;
+                            d3.select("#week-slider").property("value", selectedWeek);
+                            d3.select("#week-label").text(`Week ${selectedWeek}`);
+                            d3.select("#chk-msk").property("checked", true);
+                            d3.select("#chk-osp").property("checked", true);
+
+                            const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
+                            const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
+                            updateChart(x, y);
+
+                            // Reset zoom/pan to identity.
+                            svg.transition()
+                               .duration(300)
+                               .call(zoomBehavior.transform, d3.zoomIdentity);
+
+                            // Reset annotations to initial (intro note only, no map annotation).
+                            showAnnotations({ sidebar: ["intro-note", "guided-int-note"],
+                                              map: [] });
+
+                            d3.select("#narr-forward").text("Start Exploring").property("disabled", false).classed("is-explore", false); // reset button text
+                            currentStep = 0;
+
+                            setControlsLocked(true); // lock out free exploration again
+                            setMapInteractionLocked(true);
+                            setResetButtonLocked(true);
+                        }
+
                         // Render each species in its own layer so both are visible
                         function updateChart(x, y) {
-                            const stkChecked = d3.select("#chk-stk").property("checked");
-                            const bwhChecked = d3.select("#chk-bwh").property("checked");
+                            const mskChecked = d3.select("#chk-msk").property("checked");
+                            const ospChecked = d3.select("#chk-osp").property("checked");
 
-                            const stkWeek = (stkChecked && data_stk) ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
-                            const bwhWeek = (bwhChecked && data_bwh) ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
+                            const mskWeek = (mskChecked && data_msk) ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
+                            const ospWeek = (ospChecked && data_osp) ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
 
-                            const mergedWeek = buildMergedWeekData(stkWeek, bwhWeek, stkChecked, bwhChecked);
+                            const mergedWeek = buildMergedWeekData(mskWeek, ospWeek, mskChecked, ospChecked);
                             const hexSel = dataLayer.selectAll(".data-hex")
                                                     .data(mergedWeek, d => d.cell);
                             hexSel.exit()
@@ -276,33 +956,33 @@ get_header(); ?>
                                                       .on("pointermove", (event, d) => showTooltip(event, d))
                                                       .on("pointerleave", hideTooltip);
                             hexMerged.transition()
-                                     .ease(d3.easeCubicOut).duration(300)
-                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
+                                     .ease(d3.easeCubicOut).duration(150)
+                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 1)
                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
+                            mapAnnotationLayer.raise(); // keep annotations above hex grid
 
                         }
 
                         function getHexState(d) {
-                            const hasStk = d.det_freq_stk > 0;
-                            const hasBwh = d.det_freq_bwh > 0;
+                            const hasMsk = d.det_freq_msk > 0;
+                            const hasOsp = d.det_freq_osp > 0;
 
-                            if (hasStk && hasBwh) return "both";
-                            if (hasStk) return "stk";
-                            if (hasBwh) return "bwh";
+                            if (hasMsk && hasOsp) return "both";
+                            if (hasMsk) return "msk";
+                            if (hasOsp) return "osp";
                             return "none";
                         }
 
                         function getHexColor(state) {
                             switch (state) {
-                                case "stk": return "#1f77b4";   // blue
-                                case "bwh": return "#ff7f0e";   // orange
-                                case "both": return "#6a3d9a";  // purple
+                                case "msk": return "#12eb1f";   // bright green
+                                case "osp": return "#926fff";   // purple
+                                case "both": return "#41e2f5";  // blue - middle
                                 default: return "none";
                             }
                         }
 
-
-                        function buildMergedWeekData(stkWeek, bwhWeek, stkChecked, bwhChecked) {
+                        function buildMergedWeekData(mskWeek, ospWeek, mskChecked, ospChecked) {
                             const byCell = new Map();
 
                             function addRows(rows, species) {
@@ -313,21 +993,21 @@ get_header(); ?>
                                     cell_ctr_lat: d.cell_ctr_lat,
                                     cell_ctr_lon: d.cell_ctr_lon,
                                     country_code: d.country_code,
-                                    det_freq_stk: 0,
-                                    det_freq_bwh: 0,
+                                    det_freq_msk: 0,
+                                    det_freq_osp: 0,
                                     n_checklists: 0,
                                     n_detected: 0,
                                     tot_observed: 0
                                     });
                                 }
                                 const row = byCell.get(d.cell);
-                                if (species === "stk") {
-                                    row.det_freq_stk = d.det_freq;
+                                if (species === "msk") {
+                                    row.det_freq_msk = d.det_freq;
                                     row.n_checklists = d.n_checklists;
                                     row.n_detected = d.n_detected;
                                     row.tot_observed = d.tot_observed;
                                 } else {
-                                    row.det_freq_bwh = d.det_freq;
+                                    row.det_freq_osp = d.det_freq;
                                     row.n_checklists = d.n_checklists;
                                     row.n_detected = d.n_detected;
                                     row.tot_observed = d.tot_observed;
@@ -335,8 +1015,8 @@ get_header(); ?>
                                 }
                             }
 
-                            if (stkChecked) addRows(stkWeek, "stk");
-                            if (bwhChecked) addRows(bwhWeek, "bwh");
+                            if (mskChecked) addRows(mskWeek, "msk");
+                            if (ospChecked) addRows(ospWeek, "osp");
 
                             return Array.from(byCell.values());
                         }
@@ -403,8 +1083,8 @@ get_header(); ?>
                                     .attr("class", "map-path")
                                     .attr("d", path);
                         }
-                    </script>
 
+                    </script>
 
 				</div> <!-- viz-wrapper -->
 
