@@ -133,6 +133,7 @@
                         function showTooltip(event, d) {
                             const fmt = d3.format(".3f");
                             tooltip.html(` <strong>${fmt(d.cell_ctr_lat)}°, ${fmt(d.cell_ctr_lon)}°</strong><br/>
+                                           Country (primary): ${d.country_code}<br/>
                                            Complete checklists: ${d.n_checklists}<br/>
                                            Checklists w/ species: ${d.n_detected}<br/>
                                            Cumulative # reported: ${d.tot_observed}<br/>
