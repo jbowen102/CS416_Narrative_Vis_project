@@ -342,8 +342,8 @@
                         }
 
                         async function init() {
-                            data_stk = await d3.csv(`${dataDir}/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
-                            data_bwh = await d3.csv(`${dataDir}/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_stk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_bwh = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
 
                             firstWeek = d3.min(data_stk, d => d.week + 1);
                             selectedWeek = firstWeek;
@@ -629,7 +629,7 @@
                                                       .on("pointerleave", hideTooltip);
                             hexMerged.transition()
                                      .ease(d3.easeCubicOut).duration(150)
-                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
+                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 1)
                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
 
@@ -647,9 +647,9 @@
 
                         function getHexColor(state) {
                             switch (state) {
-                                case "stk": return "#1f77b4";   // blue
-                                case "bwh": return "#ff7f0e";   // orange
-                                case "both": return "#6a3d9a";  // purple
+                                case "stk": return "#12eb1f";   // bright green
+                                case "bwh": return "#926fff";   // purple
+                                case "both": return "#41e2f5";  // blue - middle
                                 default: return "none";
                             }
                         }
