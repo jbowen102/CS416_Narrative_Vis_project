@@ -133,6 +133,9 @@
             font-family: sans-serif;
             font-size: 12px;
         }
+        #map-interaction-blocker {
+            cursor: not-allowed;
+        }
     </style>
     <!--  -->
     <!--  -->
@@ -229,6 +232,16 @@
                            .attr("x", 0).attr("y", 0)
                            .attr("width", mapWidth).attr("height", mapHeight);
 
+                        // Transparent overlay to block all map interactions until narrative unlocks.
+                        const mapInteractionBlocker = svg.append("rect")
+                                                         .attr("id", "map-interaction-blocker")
+                                                         .attr("x", 0)
+                                                         .attr("y", 0)
+                                                         .attr("width", mapWidth)
+                                                         .attr("height", mapHeight)
+                                                         .attr("fill", "transparent")
+                                                         .style("pointer-events", "all");
+
                         // Static sidebar — NOT part of the zoom/pan transform
                         const sidebarLayer = svg.append("g")
                                                 .attr("class", "sidebar-layer")
@@ -300,6 +313,7 @@
                         let zoomBehavior;
 
                         let currentStep = 0; // intro
+                        let isMapInteractionLocked = true;
 
                         const mapAnnotationDefs = [
                             {
@@ -355,7 +369,7 @@
                                 id: "guided-int-note",
                                 x: 20,
                                 y: 90,
-                                label: "Slider and species selection will be unlocked after guided portion.",
+                                label: "Map and data controls will be unlocked after guided portion.",
                                 wrap: 160
                             },
                             {
@@ -450,6 +464,7 @@
 
                             // Lock interactive controls until narrative intro completes.
                             setControlsLocked(true);
+                            setMapInteractionLocked(true);
 
                             // Show intro note immediately; map annotation stays hidden until button click.
                             activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
@@ -480,6 +495,7 @@
                                     d3.select(this).text("Next").property("disabled", false);
                                     // updateChart(x, y);
                                     setControlsLocked(false);
+                                    setMapInteractionLocked(false);
                                     currentStep = 1;
                                 }
 
@@ -494,6 +510,10 @@
 
                             // zoom and pan
                             zoomBehavior = d3.zoom()
+                                             .filter((event) => {
+                                                 if (isMapInteractionLocked) return false;
+                                                 return (!event.ctrlKey || event.type === "wheel") && !event.button;
+                                             })
                                              .scaleExtent([1, 4]) // min/max zoom
                                              .extent([[0, 0], [mapWidth, mapHeight]]) // define the area in which zooming is allowed
                                              .translateExtent([[0,0],[mapWidth, mapHeight]]) // limit panning to given area
@@ -567,6 +587,12 @@
                             d3.select("#chk-osp-wrap").attr("title", locked ? lockMsg : "Toggle Osprey observations on/off");
                         }
 
+                        function setMapInteractionLocked(locked) {
+                            isMapInteractionLocked = locked;
+                            mapInteractionBlocker.style("display", locked ? null : "none");
+                            if (locked) hideTooltip();
+                        }
+
                         function sleep(ms) {
                             return new Promise(resolve => setTimeout(resolve, ms));
                         }
@@ -611,7 +637,7 @@
 
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
                             newGroup.transition()
-                                    .duration(300)
+                                    .duration(600)
                                     .style("opacity", 1)
                                     .end()
                                     .catch(() => {});
@@ -620,7 +646,7 @@
 
                         async function showAnnotationsStaggered(
                             { map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {},
-                            delayMs = 2000
+                            delayMs = 1500
                         ) {
                             activeMapAnnotationIds = map;
                             activeSidebarAnnotationIds = sidebar;
@@ -720,6 +746,7 @@
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
+                            setMapInteractionLocked(true);
                         }
 
                         // Render each species in its own layer so both are visible
