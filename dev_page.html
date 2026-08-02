@@ -365,6 +365,13 @@
                                 dx: 200, dy: -100,
                                 title: "",
                                 label: "Overland migration begins"
+                            },
+                            {
+                                id: "msk-no-detections",
+                                lat: 20.649, lon: -76.149,
+                                dx: 80, dy: -65,
+                                title: "",
+                                label: "No detections"
                             }
                         ];
                         let activeMapAnnotationIds = [];
@@ -432,6 +439,14 @@
                                 y: svgHeight / 8 + 20,
                                 title: "",
                                 label: "Mississippi kites start flying south, clearly following a land route through Central America.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-no-detections-note",
+                                x: 20,
+                                y: svgHeight / 8 + 65,
+                                title: "",
+                                label: "Mississippi kites travel in groups over land instead of crossing the Gulf or Caribbean in their journey to South America.",
                                 wrap: 160
                             }
                         ];
@@ -595,6 +610,34 @@
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
                                     currentStep = 3;
+
+                                    d3.select(this).text("Next").property("disabled", false);
+                                }
+
+                                else if (currentStep === 3) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 4 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Move week slider slowly to week 40.
+                                    await animateWeekSlider(40, 2600);
+
+                                    // 3) Add scene 5 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["msk-no-detections-note"],
+                                        map: ["msk-no-detections"]
+                                    });
+
+                                    // Unlock after arriving in scene 5.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 4;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true);
                                 }
