@@ -351,7 +351,7 @@
                             {
                                 id: "ex-neither",
                                 lat: 9.659, lon: -73.688,
-                                dx: -5, dy: -38,
+                                dx: -18, dy: -35,
                                 title: "",
                                 label: "neither"
                             },
@@ -397,6 +397,13 @@
                                 dx: 80, dy: -65,
                                 title: "",
                                 label: "No detections"
+                            },
+                            {
+                                id: "osp-breeding-ground",
+                                lat: 37.800, lon: -84.300,
+                                dx: 150, dy: 120,
+                                title: "",
+                                label: "Osprey breeding grounds"
                             }
                         ];
                         let activeMapAnnotationIds = [];
@@ -479,7 +486,23 @@
                                 x: 20,
                                 y: svgHeight / 2 - 30,
                                 title: "",
-                                label: "These raptors rely on air currents (\"thermals\") that form over land to help them travel; they are unable to sustain powered flight for long enough to cross this much open water.",
+                                label: "These raptors rely on air currents (\"thermals\") that form only over land to help them travel. Their physiology doesn't lend itself to prolonged powered flight, so they are unable to cross large bodies of water.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-intro-note",
+                                x: 20,
+                                y: svgHeight / 8,
+                                title: "",
+                                label: "Now let's compare to the Osprey, which uses a different migration strategy.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-breeding-note",
+                                x: 20,
+                                y: svgHeight / 8 + 80,
+                                title: "",
+                                label: "Osprey can be found throughout North America (breeding up through northern Canada and Alaska) during the warmer months",
                                 wrap: 160
                             }
 
@@ -601,8 +624,8 @@
                                              .end()
                                              .catch(() => {});
 
-                                    // 3) Move week slider back to week 30.
-                                    await animateWeekSlider(30);
+                                    // 3) Move week slider back to week 31.
+                                    await animateWeekSlider(31);
                                     await sleep(700);
 
                                     // 4) Show only Mississippi kite data.
@@ -672,10 +695,49 @@
                                         map: ["msk-no-detections"]
                                     });
 
-                                    // Final guided scene reached: unlock controls for free exploration.
-                                    setControlsLocked(false);
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
                                     setMapInteractionLocked(false);
                                     currentStep = 4;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 4) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 5 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Zoom all the way out and move slider to week 30.
+                                    await Promise.all([
+                                        svg.transition()
+                                           .duration(1000)
+                                           .call(zoomBehavior.transform, d3.zoomIdentity)
+                                           .end()
+                                           .catch(() => {}),
+                                        animateWeekSlider(31)
+                                    ]);
+
+                                    // 3) Switch to Osprey-only.
+                                    setSpeciesSelection(false, true);
+                                    updateChart(x, y);
+
+                                    // 4) Add scene 6 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["osp-breeding-note", "osp-intro-note"],
+                                        map: ["osp-breeding-ground"]
+                                    });
+
+                                    // New final scene reached: unlock controls for free exploration.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 5;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
