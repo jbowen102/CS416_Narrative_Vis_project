@@ -66,6 +66,9 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
+        .control-wrap {
+            display: inline-block;
+        }
         .narrative-button-fwd {
             position: absolute;
             top: 0;
@@ -149,13 +152,20 @@
                     <button id="narr-reset" class="narrative-button-reset" type="button">
                         Reset
                     </button>
-                    <input id="week-slider" type="range" min="27" max="48" value="27">
-                    <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
+
+                    <div class="control-wrap" id="week-slider-wrap">
+                        <input id="week-slider" type="range" min="27" max="48" value="27">
+                        <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
+                    </div>
                     <span id="week-label">Week 27</span>
 
                     <div id="species-pick">
-                        <label style="margin-right:12px;"><input type="checkbox" id="chk-stk" checked> Swallow-tailed Kite</label>
-                        <label><input type="checkbox" id="chk-bwh" checked> Broad-winged Hawk</label>
+                        <span class="control-wrap" id="chk-stk-wrap" style="display: inline-block;">
+                            <label style="margin-right:12px;"><input type="checkbox" id="chk-stk" checked> Swallow-tailed Kite</label>
+                        </span>
+                        <span class="control-wrap" id="chk-bwh-wrap" style="display: inline-block;">
+                            <label><input type="checkbox" id="chk-bwh" checked> Broad-winged Hawk</label>
+                        </span>
                     </div>
                     </br>
 
@@ -390,9 +400,15 @@
                         }
 
                         function setControlsLocked(locked) {
+                            const lockMsg = "Complete narrative steps to unlock this control";
+
                             d3.select("#week-slider").property("disabled", locked);
                             d3.select("#chk-stk").property("disabled", locked);
                             d3.select("#chk-bwh").property("disabled", locked);
+
+                            d3.select("#week-slider-wrap").attr("title", locked ? lockMsg : "Select observations for a given week");
+                            d3.select("#chk-stk-wrap").attr("title", locked ? lockMsg : "Toggle Swallow-tailed Kite observations on/off");
+                            d3.select("#chk-bwh-wrap").attr("title", locked ? lockMsg : "Toggle Broad-Winged Hawk observations on/off");
                         }
 
                         function updateMapAnnotation() {
