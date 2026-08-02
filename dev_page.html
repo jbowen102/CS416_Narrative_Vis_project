@@ -358,6 +358,13 @@
                                 dx: 200, dy: 50,
                                 title: "",
                                 label: "Mississippi Kite breeding grounds"
+                            },
+                            {
+                                id: "msk-overland-migration",
+                                lat: 17.253, lon: -91.001,
+                                dx: 200, dy: -100,
+                                title: "",
+                                label: "Overland migration begins"
                             }
                         ];
                         let activeMapAnnotationIds = [];
@@ -417,6 +424,14 @@
                                 y: svgHeight / 8 - 20,
                                 title: "",
                                 label: "Mississippi kites breed in the central/southern US during the warmer months.",
+                                wrap: 160
+                            },
+                            {
+                                id: "msk-overland-note",
+                                x: 20,
+                                y: svgHeight / 8 + 20,
+                                title: "",
+                                label: "Mississippi kites start flying south, clearly following a land route through Central America.",
                                 wrap: 160
                             }
                         ];
@@ -532,8 +547,8 @@
                                              .end()
                                              .catch(() => {});
 
-                                    // 3) Move week slider back to week 33.
-                                    await animateWeekSlider(33);
+                                    // 3) Move week slider back to week 30.
+                                    await animateWeekSlider(30);
                                     await sleep(700);
 
                                     // 4) Show only Mississippi kite data.
@@ -552,6 +567,34 @@
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
                                     currentStep = 2;
+
+                                    d3.select(this).text("Next").property("disabled", false);
+                                }
+
+                                else if (currentStep === 2) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 3 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Move week slider slowly to week 34.
+                                    await animateWeekSlider(34, 2600);
+
+                                    // 3) Add scene 4 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["msk-overland-note"],
+                                        map: ["msk-overland-migration"]
+                                    });
+
+                                    // Unlock again after arriving in scene 4.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 3;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true);
                                 }
