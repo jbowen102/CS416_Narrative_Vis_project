@@ -614,8 +614,8 @@ get_header(); ?>
                                         map: ["msk-breeding-ground"]
                                     });
 
-                                    // Final scene reached: unlock controls and map interactions.
-                                    setControlsLocked(false);
+                                    // Keep data controls locked for subsequent guided scenes.
+                                    setControlsLocked(true);
                                     setMapInteractionLocked(false);
                                     currentStep = 2;
 
@@ -642,8 +642,8 @@ get_header(); ?>
                                         map: ["msk-overland-migration"]
                                     });
 
-                                    // Unlock again after arriving in scene 4.
-                                    setControlsLocked(false);
+                                    // Keep data controls locked for subsequent guided scenes.
+                                    setControlsLocked(true);
                                     setMapInteractionLocked(false);
                                     currentStep = 3;
 
@@ -670,7 +670,7 @@ get_header(); ?>
                                         map: ["msk-no-detections"]
                                     });
 
-                                    // Unlock after arriving in scene 5.
+                                    // Final guided scene reached: unlock controls for free exploration.
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
                                     currentStep = 4;

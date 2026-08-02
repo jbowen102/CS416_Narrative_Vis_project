@@ -421,7 +421,7 @@
                             {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 140,
+                                y: svgHeight / 2 - 200,
                                 title: "INTRO",
                                 label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
                                 wrap: 160
@@ -429,7 +429,7 @@
                             {
                                 id: "hex-presence-note",
                                 x: 20,
-                                y: svgHeight / 2 - 40,
+                                y: svgHeight / 2 - 100,
                                 title: "",
                                 label: "A missing cell outline indicates no checklists were collected in that area this week.",
                                 wrap: 160
@@ -437,7 +437,7 @@
                             {
                                 id: "hover-note",
                                 x: 20,
-                                y: svgHeight / 2 + 40,
+                                y: svgHeight / 2 - 20,
                                 title: "",
                                 label: "Hover over each cell to see more details.",
                                 wrap: 160
@@ -445,7 +445,7 @@
                             {
                                 id: "zoom-pan-note",
                                 x: 20,
-                                y: svgHeight / 2 + 90,
+                                y: svgHeight / 2 + 30,
                                 title: "",
                                 label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
                                 wrap: 160
@@ -616,8 +616,8 @@
                                         map: ["msk-breeding-ground"]
                                     });
 
-                                    // Final scene reached: unlock controls and map interactions.
-                                    setControlsLocked(false);
+                                    // Keep data controls locked for subsequent guided scenes.
+                                    setControlsLocked(true);
                                     setMapInteractionLocked(false);
                                     currentStep = 2;
 
@@ -644,8 +644,8 @@
                                         map: ["msk-overland-migration"]
                                     });
 
-                                    // Unlock again after arriving in scene 4.
-                                    setControlsLocked(false);
+                                    // Keep data controls locked for subsequent guided scenes.
+                                    setControlsLocked(true);
                                     setMapInteractionLocked(false);
                                     currentStep = 3;
 
@@ -672,7 +672,7 @@
                                         map: ["msk-no-detections"]
                                     });
 
-                                    // Unlock after arriving in scene 5.
+                                    // Final guided scene reached: unlock controls for free exploration.
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
                                     currentStep = 4;
