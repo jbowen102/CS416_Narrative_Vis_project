@@ -69,6 +69,7 @@
             stroke: white;
             stroke-width: 2;
             fill: none;
+            vector-effect: non-scaling-stroke;
         }
         .annotation-group .annotation-note-label,
         .annotation-group .annotation-note-title {
@@ -84,12 +85,11 @@
         }
         .annotation-group .annotation-note-bg {
             fill: rgba(0, 0, 0, 0.85);
-            stroke: white;
-            stroke-width: 1;
+            stroke: none;
             rx: 6px;
         }
         .annotation-group .connector-end {
-            stroke: white;
+            stroke: none;
             fill: white;
         }
         .annotation-group .subject {
@@ -218,7 +218,7 @@
                                 id: "florida-hotspot",
                                 lon: -80.5,
                                 lat: 26.5,
-                                dx: 30,
+                                dx: 130,
                                 dy: -70,
                                 title: "A key migration hotspot",
                                 label: "Florida region",
@@ -318,14 +318,16 @@
                                     note: {
                                         label: a.label,
                                         title: a.title,
-                                        wrap: a.wrap ?? 140
+                                        wrap: a.wrap ?? 140,
+                                        padding: 10,
+                                        align: "dynamic"
+                                        // align: "left"
                                     },
                                     x,
                                     y,
                                     dx: a.dx,
                                     dy: a.dy,
-                                    connector: { end: "arrow" },
-                                    subject: { radius: 5 }
+                                    connector: { end: "dot" }
                                 };
                             });
 
