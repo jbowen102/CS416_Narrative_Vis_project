@@ -472,7 +472,7 @@
                                     await zoomToLonLat(-85, 5, 1.9, 2500);
 
                                     // 3) annotations
-                                    await showAnnotations({
+                                    await showAnnotationsStaggered({
                                         sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                                     });
@@ -567,6 +567,10 @@
                             d3.select("#chk-osp-wrap").attr("title", locked ? lockMsg : "Toggle Osprey observations on/off");
                         }
 
+                        function sleep(ms) {
+                            return new Promise(resolve => setTimeout(resolve, ms));
+                        }
+
                         function updateMapAnnotation() {
                             if (!projection) return Promise.resolve();
 
@@ -612,6 +616,21 @@
                                     .end()
                                     .catch(() => {});
 
+                        }
+
+                        async function showAnnotationsStaggered(
+                            { map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {},
+                            delayMs = 2000
+                        ) {
+                            activeMapAnnotationIds = map;
+                            activeSidebarAnnotationIds = sidebar;
+
+                            // Sidebar first
+                            await updateSidebarAnnotation();
+
+                            // Then map after delay
+                            await sleep(delayMs);
+                            await updateMapAnnotation();
                         }
 
                         function updateSidebarAnnotation() {
@@ -669,7 +688,10 @@
                         async function runNarrativeStep(step) {
                             await animateWeekSlider(step.week, 700);
                             await zoomToLonLat(step.lon, step.lat, step.scale, 800);
-                            await showAnnotations({ map: step.mapAnnIds, sidebar: step.sidebarAnnIds });
+                            await showAnnotationsStaggered({
+                                sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
+                            }, 2000);
                         }
 
                         function resetVisualization() {
