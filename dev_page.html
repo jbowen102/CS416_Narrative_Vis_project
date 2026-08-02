@@ -136,8 +136,11 @@
                         const dataDir = "source_data_upload";
 
                         const svg = d3.select("#map");
-                        const svgWidth = 500;
+                        const sidebarWidth = 200;
+                        const mapWidth = 500;
+                        const svgWidth = mapWidth + sidebarWidth;
                         const svgHeight = 550;
+                        const mapHeight = svgHeight;
                         svg.attr("width", svgWidth)
                            .attr("height", svgHeight);
 
@@ -171,7 +174,18 @@
                         const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
                         const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
                         const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
-                        const annotationLayer = svg.append("g").attr("class", "annotation-layer");
+                        const mapAnnotationLayer = dataLayer.append("g").attr("class", "map-annotation-layer");
+
+                        // Static sidebar — NOT part of the zoom/pan transform
+                        const sidebarLayer = svg.append("g")
+                                                .attr("class", "sidebar-layer")
+                                                .attr("transform", `translate(${mapWidth}, 0)`);
+                        sidebarLayer.append("rect")
+                                    .attr("class", "sidebar-bg")
+                                    .attr("width", sidebarWidth)
+                                    .attr("height", svgHeight)
+                                    .attr("fill", "black");
+                        const sidebarAnnotationLayer = sidebarLayer.append("g").attr("class", "sidebar-annotation-layer");
 
                         const latLabelShift = 70;  // shift latitude-line labels rightward (pixels)
                         const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
@@ -213,7 +227,7 @@
 
                         let annotationVisible = false;
 
-                        const annotationDefs = [
+                        const mapAnnotationDefs = [
                             {
                                 id: "florida-hotspot",
                                 lon: -80.5,
@@ -225,7 +239,21 @@
                                 wrap: 140
                             }
                         ];
-                        let activeAnnotationIds = ["florida-hotspot"]; // which defs are currently shown
+
+                        // Sidebar: positioned by fixed x/y within the sidebar. No connector/subject.
+                        const sidebarAnnotationDefs = [
+                            {
+                                id: "intro-note",
+                                x: 20,
+                                y: 60,
+                                title: "Welcome",
+                                label: "Explore where these two raptor species migrate throughout the year.",
+                                wrap: 160
+                            }
+                        ];
+
+                        let activeMapAnnotationIds = ["florida-hotspot"]; // which defs are currently shown
+                        let activeSidebarAnnotationIds = ["intro-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -280,20 +308,18 @@
 
                             updateChart(x, y);
 
-                            d3.select("#show-annotation").on("click", () => showAnnotation());
+                            d3.select("#show-annotation").on("click", () => showAnnotations());
 
                             // zoom and pan
                             const zoom = d3.zoom()
                                            .scaleExtent([1, 4]) // min/max zoom
-                                           .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
-                                           .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
+                                           .extent([[0, 0], [mapWidth, mapHeight]]) // define the area in which zooming is allowed
+                                           .translateExtent([[0,0],[mapWidth, mapHeight]]) // limit panning to given area
                                            .on("zoom", (event) => {
                                                    currentTransform = event.transform;
                                                    mapLayer.attr("transform", currentTransform);
                                                    dataLayer.attr("transform", currentTransform);
-                                                   annotationLayer.attr("transform", currentTransform); // stay attached to map
                                                    updateLabelTransform();
-                                                   if (annotationVisible) updateAnnotation();
                                            });
 
                             svg.call(zoom);
@@ -307,10 +333,11 @@
 
                         }
 
-                        function updateAnnotation() {
+
+                        function updateMapAnnotation() {
                             if (!projection || !annotationVisible) return;
 
-                            const activeDefs = annotationDefs.filter(a => activeAnnotationIds.includes(a.id));
+                            const activeDefs = mapAnnotationDefs.filter(a => activeMapAnnotationIds.includes(a.id));
 
                             const annotations = activeDefs.map(a => {
                                 const [x, y] = projection([a.lon, a.lat]);
@@ -321,13 +348,13 @@
                                         wrap: a.wrap ?? 140,
                                         padding: 10,
                                         align: "dynamic"
-                                        // align: "left"
                                     },
                                     x,
                                     y,
                                     dx: a.dx,
                                     dy: a.dy,
-                                    connector: { end: "dot" }
+                                    connector: { end: "dot" },
+                                    subject: { radius: 5 }
                                 };
                             });
 
@@ -335,22 +362,55 @@
                                                       .type(d3.annotationLabel)
                                                       .annotations(annotations);
 
-                            annotationLayer.selectAll(".annotation-group").remove();
-
-                            annotationLayer.append("g")
-                                           .attr("class", "annotation-group")
-                                           .call(makeAnnotations);
+                            mapAnnotationLayer.selectAll(".annotation-group").remove();
+                            mapAnnotationLayer.append("g")
+                                              .attr("class", "annotation-group")
+                                              .call(makeAnnotations);
+                            mapAnnotationLayer.raise(); // keep annotations above hex grid
                         }
 
-                        function showAnnotation(ids = activeAnnotationIds) {
+                        function updateSidebarAnnotation() {
+                            if (!annotationVisible) return;
+
+                            const activeDefs = sidebarAnnotationDefs.filter(a => activeSidebarAnnotationIds.includes(a.id));
+
+                            const annotations = activeDefs.map(a => ({
+                                note: {
+                                    label: a.label,
+                                    title: a.title,
+                                    wrap: a.wrap ?? 160,
+                                    padding: 10,
+                                    align: "left"
+                                },
+                                x: a.x,
+                                y: a.y,
+                                dx: 0,
+                                dy: 0
+                            }));
+
+                            const makeAnnotations = d3.annotation()
+                                                      .type(d3.annotationLabel)
+                                                      .disable(["connector", "subject"])
+                                                      .annotations(annotations);
+
+                            sidebarAnnotationLayer.selectAll(".annotation-group").remove();
+                            sidebarAnnotationLayer.append("g")
+                                                  .attr("class", "annotation-group")
+                                                  .call(makeAnnotations);
+                        }
+
+                        function showAnnotations({ map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {}) {
                             annotationVisible = true;
-                            activeAnnotationIds = ids;
-                            updateAnnotation();
+                            activeMapAnnotationIds = map;
+                            activeSidebarAnnotationIds = sidebar;
+                            updateMapAnnotation();
+                            updateSidebarAnnotation();
                         }
 
-                        function hideAnnotation() {
+                        function hideAnnotations() {
                             annotationVisible = false;
-                            annotationLayer.selectAll("*").remove();
+                            mapAnnotationLayer.selectAll("*").remove();
+                            sidebarAnnotationLayer.selectAll("*").remove();
                         }
 
                         // Render each species in its own layer so both are visible
@@ -390,6 +450,7 @@
                                      .ease(d3.easeCubicOut).duration(150)
                                      .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
+                            mapAnnotationLayer.raise(); // keep annotations above hex grid
 
                         }
 
