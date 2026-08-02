@@ -254,8 +254,6 @@ get_header(); ?>
                             const hexSel = dataLayer.selectAll(".data-hex")
                                                     .data(mergedWeek, d => d.cell);
                             hexSel.exit()
-                                  .interrupt()
-                                  .transition().ease(d3.easeCubicIn).duration(300)
                                   .attr("fill-opacity", 0)
                                   .attr("stroke-opacity", 0)
                                   .remove();
@@ -271,9 +269,7 @@ get_header(); ?>
                                                    .attr("fill-opacity", 0);
                             // now include circles that were already there AND in new data (so not exited)
                             const hexMerged = hexEnter.merge(hexSel)
-                                                    //   .style("opacity", 1)
                                                       .attr("fill", d => getHexColor(getHexState(d)))
-                                                      //   .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
                                                       .attr("fill-opacity", 0)
                                                       .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
