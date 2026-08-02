@@ -83,6 +83,9 @@
             color: white;
             cursor: pointer;
         }
+            .narrative-button-fwd.is-explore {
+                background: #666;
+            }
         .narrative-button-reset {
             position: absolute;
             top: 30px;
@@ -537,7 +540,7 @@
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                                     });
 
-                                    d3.select(this).text("Next").property("disabled", false);
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
                                     // Keep data controls locked until the final scene.
                                     setControlsLocked(true);
                                     setMapInteractionLocked(false);
@@ -583,7 +586,7 @@
                                     setMapInteractionLocked(false);
                                     currentStep = 2;
 
-                                    d3.select(this).text("Next").property("disabled", false);
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
                                 }
 
                                 else if (currentStep === 2) {
@@ -611,7 +614,7 @@
                                     setMapInteractionLocked(false);
                                     currentStep = 3;
 
-                                    d3.select(this).text("Next").property("disabled", false);
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
                                 }
 
                                 else if (currentStep === 3) {
@@ -639,7 +642,7 @@
                                     setMapInteractionLocked(false);
                                     currentStep = 4;
 
-                                    d3.select(this).text("Explore Freely").property("disabled", true);
+                                    d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
 
                                 // Add more steps here as you build out the narrative.
@@ -883,7 +886,7 @@
                             showAnnotations({ sidebar: ["intro-note", "guided-int-note"],
                                               map: [] });
 
-                            d3.select("#narr-forward").text("Start Exploring").property("disabled", false); // reset button text
+                            d3.select("#narr-forward").text("Start Exploring").property("disabled", false).classed("is-explore", false); // reset button text
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
