@@ -361,15 +361,15 @@
                             {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 100,
-                                title: "",
+                                y: svgHeight / 2 - 120,
+                                title: "INTRO",
                                 label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
                                 wrap: 160
                             },
                             {
                                 id: "hex-presence-note",
                                 x: 20,
-                                y: svgHeight / 2,
+                                y: svgHeight / 2 - 20,
                                 title: "",
                                 label: "A missing cell outline indicates no checklists were collected in that area this week.",
                                 wrap: 160
@@ -377,9 +377,17 @@
                             {
                                 id: "hover-note",
                                 x: 20,
-                                y: svgHeight / 2 + 100,
+                                y: svgHeight / 2 + 60,
                                 title: "",
                                 label: "Hover over each cell to see more details.",
+                                wrap: 160
+                            },
+                            {
+                                id: "zoom-pan-note",
+                                x: 20,
+                                y: svgHeight / 2 + 110,
+                                title: "",
+                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
                                 wrap: 160
                             }
                         ];
@@ -481,7 +489,7 @@
                                     // Zoom in centered on (lat 10, lon -77).
                                     zoomToLonLat(-85, 5, 1.9, 2500);
                                     showAnnotations({
-                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note"],
+                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                                     });
                                     d3.select(this).text("Next");
