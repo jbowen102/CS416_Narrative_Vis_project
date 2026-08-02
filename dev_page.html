@@ -245,14 +245,14 @@
                             {
                                 id: "intro-note",
                                 x: 20,
-                                y: 60,
+                                y: 0,
                                 title: "Welcome",
-                                label: "Explore where these two raptor species migrate throughout the year.",
+                                label: "Click Start Exploring to see how these two raptor species migrate each Fall.",
                                 wrap: 160
                             }
                         ];
 
-                        let activeMapAnnotationIds = ["florida-hotspot"]; // which defs are currently shown
+                        let activeMapAnnotationIds = ["florida-hotspot"];
                         let activeSidebarAnnotationIds = ["intro-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
@@ -308,7 +308,17 @@
 
                             updateChart(x, y);
 
-                            d3.select("#show-annotation").on("click", () => showAnnotations());
+                            // Show intro note immediately; map annotation stays hidden until button click.
+                            annotationVisible = true;
+                            activeSidebarAnnotationIds = ["intro-note"];
+                            activeMapAnnotationIds = [];
+                            updateSidebarAnnotation();
+                            updateMapAnnotation();
+
+                            d3.select("#show-annotation").on("click", () => {
+                                showAnnotations({ sidebar: [],
+                                                  map: ["florida-hotspot"] });
+                            });
 
                             // zoom and pan
                             const zoom = d3.zoom()
