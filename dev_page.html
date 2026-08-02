@@ -61,6 +61,11 @@
             z-index: 1000;
             white-space: nowrap;
         }
+        #week-slider:disabled,
+        #species-pick input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
         .narrative-button-fwd {
             position: absolute;
             top: 0;
@@ -341,6 +346,9 @@
 
                             updateChart(x, y);
 
+                            // Lock interactive controls until narrative intro completes.
+                            setControlsLocked(true);
+
                             // Show intro note immediately; map annotation stays hidden until button click.
                             activeSidebarAnnotationIds = ["intro-note"];
                             activeMapAnnotationIds = [];
@@ -350,6 +358,10 @@
                             d3.select("#narr-forward").on("click", () => {
                                 showAnnotations({ sidebar: [],
                                                   map: ["florida-hotspot"] });
+
+                                // more steps
+
+                                setControlsLocked(false); // narrative complete — unlock free exploration
                             });
 
                             d3.select("#narr-reset").on("click", resetVisualization);
@@ -377,6 +389,11 @@
 
                         }
 
+                        function setControlsLocked(locked) {
+                            d3.select("#week-slider").property("disabled", locked);
+                            d3.select("#chk-stk").property("disabled", locked);
+                            d3.select("#chk-bwh").property("disabled", locked);
+                        }
 
                         function updateMapAnnotation() {
                             if (!projection) return;
@@ -491,6 +508,8 @@
                             // Reset annotations to initial (intro note only, no map annotation).
                             showAnnotations({ sidebar: ["intro-note"],
                                               map: [] });
+
+                            setControlsLocked(true); // lock out free exploration again
                         }
 
                         // Render each species in its own layer so both are visible
