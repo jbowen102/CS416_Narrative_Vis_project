@@ -94,8 +94,8 @@
                            .attr("height", svgHeight);
 
                         const map_scale = 530;
-                        const latOffset = 23;  // shift map leftward in SVG window
-                        const vertOffset = 5;  // shift map downward in SVG window
+                        const latMapOffset = 23;  // shift map leftward in SVG window
+                        const vertMapOffset = 5;  // shift map downward in SVG window
                         const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
                         const hexRadiusKm = hexSpacingKm / 2;
 
@@ -123,6 +123,9 @@
                         const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
                         const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
                         const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
+
+                        const latLabelShift = 55;  // shift latitude-line labels rightward (pixels)
+                        const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
 
                         const wrapper = d3.select("#viz-wrapper");
                         const tooltip = wrapper.select("#tooltip");
@@ -176,8 +179,8 @@
                             lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
                             lon_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lon));
                             // https://observablehq.com/@d3/d3-extent
-                            const centerLon = latOffset + (lon_range[0]-1 + lon_range[1]) / 2;
-                            const centerLat = vertOffset + (lat_range[0]-1 + lat_range[1]) / 2;
+                            const centerLon = latMapOffset + (lon_range[0]-1 + lon_range[1]) / 2;
+                            const centerLat = vertMapOffset + (lat_range[0]-1 + lat_range[1]) / 2;
                             // expanded longitude range by 1 degree West to un-crowd axis
                             // expanded latitude range by 1 degree South to un-crowd axis
 
@@ -306,8 +309,7 @@
                             const lonValues = d3.range(Math.ceil(lon_range[0] / 10) * 10, lon_range[1] + 1, 10);
                             const lonLabels = lonValues.map(lon => {
                                 const p = projection([lon, lat_range[0]]);
-                                return p ? { text: `${lon}°`, x: p[0], y: p[1] + 45, anchor: "middle" } : null;
-                                // return p ? { text: `${lon}°`, x: p[0], y: p[1] + 14, anchor: "middle" } : null;
+                                return p ? { text: `${lon}°`, x: p[0], y: p[1] - lonLabelShift, anchor: "middle" } : null;
                             }).filter(Boolean);
 
                             labelLayer.selectAll(".lon-label")
@@ -323,8 +325,7 @@
                             const latValues = d3.range(Math.ceil(lat_range[0] / 10) * 10, lat_range[1] + 1, 10);
                             const latLabels = latValues.map(lat => {
                                 const p = projection([lon_range[0], lat]);
-                                return p ? { text: `${lat}°`, x: p[0] - 100, y: p[1] - 5, anchor: "end" } : null;
-                                // return p ? { text: `${lat}°`, x: p[0] - 6, y: p[1] + 4, anchor: "end" } : null;
+                                return p ? { text: `${lat}°`, x: p[0] + latLabelShift, y: p[1] - 5, anchor: "end" } : null;
                             }).filter(Boolean);
 
                             labelLayer.selectAll(".lat-label")
