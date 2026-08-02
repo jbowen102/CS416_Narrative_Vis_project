@@ -84,16 +84,19 @@ get_header(); ?>
                     color: white;
                     cursor: pointer;
                 }
-                    .narrative-button-fwd.is-explore {
-                        background: #666;
-                    }
-                    .narrative-button-fwd:disabled {
-                        background: #666;
-                        cursor: not-allowed;
-                    }
+                .narrative-button-fwd:not(:disabled):not(.is-explore):hover {
+                    background: #12eb219c;
+                }
+                .narrative-button-fwd.is-explore {
+                    background: #666;
+                }
+                .narrative-button-fwd:disabled {
+                    background: #666;
+                    cursor: not-allowed;
+                }
                 .narrative-button-reset {
                     position: absolute;
-                    top: 30px;
+                    top: 40px;
                     width: 80px;
                     left: calc(500px + 200px - 80px); /* mapWidth + sidebarWidth - button width */
                     margin: 0;
