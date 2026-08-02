@@ -41,17 +41,6 @@ get_header(); ?>
                     stroke-opacity: 0.3;
                     vector-effect: non-scaling-stroke;
                 }
-                .stk-hex {
-                    fill: royalblue;
-                    /* fill-opacity: 0.7; */
-                }
-                .bwh-hex {
-                    fill: orange;
-                    /* fill-opacity: 0.7; */
-                }
-                circle {
-                    vector-effect: non-scaling-stroke;
-                }
                 .graticule {
                     fill: none;
                     stroke: #ccc;
@@ -86,7 +75,8 @@ get_header(); ?>
                 <div id="viz-wrapper">
 
                     <input id="week-slider" type="range" min="27" max="48" value="27">
-					<span id="week-label">Week 27</span>
+
+                    <span id="week-label">Week 27</span>
 
                     <div id="species-pick">
                         <label style="margin-right:12px;"><input type="checkbox" id="chk-stk" checked> Swallow-tailed Kite</label>
@@ -96,7 +86,6 @@ get_header(); ?>
 
                     <div id="tooltip" class="tooltip"></div>
                     <svg id="map"></svg>
-
                     <script>
                         window.addEventListener("load", init);
 
@@ -232,15 +221,15 @@ get_header(); ?>
 
                             // zoom and pan
                             const zoom = d3.zoom()
-                                        .scaleExtent([1, 4]) // min/max zoom
-                                        .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
-                                        .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
-                                        .on("zoom", (event) => {
-                                                currentTransform = event.transform;
-                                                mapLayer.attr("transform", currentTransform);
-                                                dataLayer.attr("transform", currentTransform);
-                                                updateLabelTransform();
-                                        });
+                                           .scaleExtent([1, 4]) // min/max zoom
+                                           .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
+                                           .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
+                                           .on("zoom", (event) => {
+                                                   currentTransform = event.transform;
+                                                   mapLayer.attr("transform", currentTransform);
+                                                   dataLayer.attr("transform", currentTransform);
+                                                   updateLabelTransform();
+                                           });
 
                             svg.call(zoom);
 
@@ -261,62 +250,99 @@ get_header(); ?>
                             const stkWeek = (stkChecked && data_stk) ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
                             const bwhWeek = (bwhChecked && data_bwh) ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
 
-                            let stkWeek_freq_range = [0, d3.max(stkWeek, d => d.det_freq) || 0];
-                            let bwhWeek_freq_range = [0, d3.max(bwhWeek, d => d.det_freq) || 0];
-
-                            // STK
-                            // const stkSel = layerSTK.selectAll("circle")
-                            const stkSel = layerSTK.selectAll(".data-hex")
-                                                   .data(stkWeek, d => d.cell);
-                            // Transition out the points no longer in the data
-                            stkSel.exit()
+                            const mergedWeek = buildMergedWeekData(stkWeek, bwhWeek, stkChecked, bwhChecked);
+                            const hexSel = dataLayer.selectAll(".data-hex")
+                                                    .data(mergedWeek, d => d.cell);
+                            hexSel.exit()
+                                  .interrupt()
                                   .transition().ease(d3.easeCubicIn).duration(300)
-                                  .style("opacity", 0)
+                                  .attr("fill-opacity", 0)
+                                  .attr("stroke-opacity", 0)
                                   .remove();
                                   // https://d3js.org/d3-ease
                             // new circles needed for new data points
                             // starting with invisible fill
-                            const stkEnter = stkSel.enter()
+                            const hexEnter = hexSel.enter()
                                                    .append("path")
-                                                   .attr("class", "data-hex stk-hex")
+                                                   .attr("class", "data-hex")
                                                    .attr("d", d => makeHexPath(d.cell_ctr_lon, d.cell_ctr_lat, hexRadiusKm))
                                                    .attr("stroke", "gainsboro")
-                                                // .attr("fill", d => colorScale(stkWeek_freq_range, "royalblue")(d.det_freq))
+                                                   .attr("stroke-opacity", 0)
                                                    .attr("fill-opacity", 0);
                             // now include circles that were already there AND in new data (so not exited)
-                            const stkMerged = stkEnter.merge(stkSel)
-                                                      .style("opacity", 1)
+                            const hexMerged = hexEnter.merge(hexSel)
+                                                    //   .style("opacity", 1)
+                                                      .attr("fill", d => getHexColor(getHexState(d)))
+                                                      //   .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
+                                                      .attr("fill-opacity", 0)
+                                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
                                                       .on("pointermove", (event, d) => showTooltip(event, d))
                                                       .on("pointerleave", hideTooltip);
-                            stkMerged.transition()
+                            hexMerged.transition()
                                      .ease(d3.easeCubicOut).duration(300)
-                                     .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0)
+                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
+                                     .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
 
-                            // BWH
-                            // const bwhSel = layerBWH.selectAll("circle")
-                            const bwhSel = layerBWH.selectAll(".data-hex")
-                                                   .data(bwhWeek, d => d.cell);
-                            bwhSel.exit()
-                                  .transition().ease(d3.easeCubicIn).duration(300)
-                                  .style("opacity", 0)
-                                  .remove();
+                        }
 
-                            const bwhEnter = bwhSel.enter()
-                                                   .append("path")
-                                                   .attr("class", "data-hex bwh-hex")
-                                                   .attr("d", d => makeHexPath(d.cell_ctr_lon, d.cell_ctr_lat, hexRadiusKm))
-                                                   .attr("stroke", "gainsboro")
-                                                // .attr("fill", d => colorScale(bwhWeek_freq_range, "orange")(d.det_freq))
-                                                   .attr("fill-opacity", 0);
-                            const bwhMerged = bwhEnter.merge(bwhSel)
-                                                      .style("opacity", 1)
-                                                      .on("pointerenter", (event, d) => showTooltip(event, d))
-                                                      .on("pointermove", (event, d) => showTooltip(event, d))
-                                                      .on("pointerleave", hideTooltip);
-                            bwhMerged.transition()
-                                     .ease(d3.easeCubicOut).duration(300)
-                                     .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0)
+                        function getHexState(d) {
+                            const hasStk = d.det_freq_stk > 0;
+                            const hasBwh = d.det_freq_bwh > 0;
+
+                            if (hasStk && hasBwh) return "both";
+                            if (hasStk) return "stk";
+                            if (hasBwh) return "bwh";
+                            return "none";
+                        }
+
+                        function getHexColor(state) {
+                            switch (state) {
+                                case "stk": return "#1f77b4";   // blue
+                                case "bwh": return "#ff7f0e";   // orange
+                                case "both": return "#6a3d9a";  // purple
+                                default: return "none";
+                            }
+                        }
+
+
+                        function buildMergedWeekData(stkWeek, bwhWeek, stkChecked, bwhChecked) {
+                            const byCell = new Map();
+
+                            function addRows(rows, species) {
+                                for (const d of rows) {
+                                if (!byCell.has(d.cell)) {
+                                    byCell.set(d.cell, {
+                                    cell: d.cell,
+                                    cell_ctr_lat: d.cell_ctr_lat,
+                                    cell_ctr_lon: d.cell_ctr_lon,
+                                    country_code: d.country_code,
+                                    det_freq_stk: 0,
+                                    det_freq_bwh: 0,
+                                    n_checklists: 0,
+                                    n_detected: 0,
+                                    tot_observed: 0
+                                    });
+                                }
+                                const row = byCell.get(d.cell);
+                                if (species === "stk") {
+                                    row.det_freq_stk = d.det_freq;
+                                    row.n_checklists = d.n_checklists;
+                                    row.n_detected = d.n_detected;
+                                    row.tot_observed = d.tot_observed;
+                                } else {
+                                    row.det_freq_bwh = d.det_freq;
+                                    row.n_checklists = d.n_checklists;
+                                    row.n_detected = d.n_detected;
+                                    row.tot_observed = d.tot_observed;
+                                }
+                                }
+                            }
+
+                            if (stkChecked) addRows(stkWeek, "stk");
+                            if (bwhChecked) addRows(bwhWeek, "bwh");
+
+                            return Array.from(byCell.values());
                         }
 
                         function makeLabels(lat_range, lon_range) {

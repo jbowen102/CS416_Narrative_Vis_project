@@ -1,3 +1,12 @@
+
+
+
+
+
+
+
+
+
 <html>
     <style>
         body {
@@ -31,9 +40,6 @@
             stroke-opacity: 0.3;
             vector-effect: non-scaling-stroke;
         }
-        circle {
-            vector-effect: non-scaling-stroke;
-        }
         .graticule {
             fill: none;
             stroke: #ccc;
@@ -50,7 +56,11 @@
             stroke-width: 1.5px;
         }
     </style>
-	<div id="primary" class="content-area grid-100 tablet-grid-100 mobile-grid-100">
+
+
+
+
+    <div id="primary" class="content-area grid-100 tablet-grid-100 mobile-grid-100">
 		<main id="main" class="site-main" role="main">
             <div class="entry-content special-page-content">
 
@@ -211,15 +221,15 @@
 
                             // zoom and pan
                             const zoom = d3.zoom()
-                                        .scaleExtent([1, 4]) // min/max zoom
-                                        .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
-                                        .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
-                                        .on("zoom", (event) => {
-                                                currentTransform = event.transform;
-                                                mapLayer.attr("transform", currentTransform);
-                                                dataLayer.attr("transform", currentTransform);
-                                                updateLabelTransform();
-                                        });
+                                           .scaleExtent([1, 4]) // min/max zoom
+                                           .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
+                                           .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
+                                           .on("zoom", (event) => {
+                                                   currentTransform = event.transform;
+                                                   mapLayer.attr("transform", currentTransform);
+                                                   dataLayer.attr("transform", currentTransform);
+                                                   updateLabelTransform();
+                                           });
 
                             svg.call(zoom);
 
@@ -261,9 +271,7 @@
                                                    .attr("fill-opacity", 0);
                             // now include circles that were already there AND in new data (so not exited)
                             const hexMerged = hexEnter.merge(hexSel)
-                                                    //   .style("opacity", 1)
                                                       .attr("fill", d => getHexColor(getHexState(d)))
-                                                      //   .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
                                                       .attr("fill-opacity", 0)
                                                       .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
