@@ -365,9 +365,10 @@
                             updateSidebarAnnotation();
                             updateMapAnnotation();
 
-                            d3.select("#narr-forward").on("click", () => {
+                            d3.select("#narr-forward").on("click", function() {
                                 showAnnotations({ sidebar: [],
                                                   map: ["florida-hotspot"] });
+                                d3.select(this).text("Next"); // change button text
 
                                 // more steps
 
@@ -525,6 +526,8 @@
                             // Reset annotations to initial (intro note only, no map annotation).
                             showAnnotations({ sidebar: ["intro-note"],
                                               map: [] });
+
+                            d3.select("#narr-forward").text("Start Exploring"); // reset button text
 
                             setControlsLocked(true); // lock out free exploration again
                         }
