@@ -127,6 +127,11 @@
             fill: #ff7f0e;
             stroke: none;
         }
+        .sidebar-citation {
+            fill: #999;
+            font-family: sans-serif;
+            font-size: 12px;
+        }
     </style>
     <!--  -->
     <!--  -->
@@ -233,6 +238,23 @@
                                     .attr("height", svgHeight)
                                     .attr("fill", "black");
                         const sidebarAnnotationLayer = sidebarLayer.append("g").attr("class", "sidebar-annotation-layer");
+
+                        const citationText = [
+                            "eBird Basic Dataset.",
+                            "Version: EBD_relMar-2026.",
+                            "Cornell Lab of Ornithology",
+                            "Ithaca, New York. Mar 2026."
+                        ];
+
+                        const citationGroup = sidebarLayer.append("g")
+                                                           .attr("class", "sidebar-citation")
+                                                           .attr("transform", `translate(20, ${svgHeight - 45})`);
+                        citationGroup.selectAll("text")
+                                     .data(citationText)
+                                     .enter()
+                                     .append("text")
+                                     .attr("y", (d, i) => i * 12)
+                                     .text(d => d);
 
                         const latLabelShift = 70;  // shift latitude-line labels rightward (pixels)
                         const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
