@@ -320,11 +320,18 @@
                                 title: "Welcome",
                                 label: "Click Start Exploring to see how these two raptor species migrate each Fall.",
                                 wrap: 160
+                            },
+                            {
+                                id: "guided-int-note",
+                                x: 20,
+                                y: 90,
+                                label: "Slider and species selection will be unlocked after guided portion.",
+                                wrap: 160
                             }
                         ];
 
                         let activeMapAnnotationIds = ["florida-hotspot"];
-                        let activeSidebarAnnotationIds = ["intro-note"];
+                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -384,7 +391,7 @@
                             setControlsLocked(true);
 
                             // Show intro note immediately; map annotation stays hidden until button click.
-                            activeSidebarAnnotationIds = ["intro-note"];
+                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
                             activeMapAnnotationIds = [];
                             updateSidebarAnnotation();
                             updateMapAnnotation();
@@ -578,7 +585,7 @@
                                .call(zoomBehavior.transform, d3.zoomIdentity);
 
                             // Reset annotations to initial (intro note only, no map annotation).
-                            showAnnotations({ sidebar: ["intro-note"],
+                            showAnnotations({ sidebar: ["intro-note", "guided-int-note"],
                                               map: [] });
 
                             d3.select("#narr-forward").text("Start Exploring"); // reset button text
