@@ -70,7 +70,7 @@ get_header(); ?>
                 <script src='https://unpkg.com/topojson-client@3'></script>
 				<!-- <img src="<?php echo esc_url( content_url( '/uploads/2026/07/stk_mockup-300x300.png.webp' ) ); ?>" alt="Narrative visualization image" style="max-width:100%; height:auto; margin:1rem 0;" /> -->
 
-				<p>Swallow-tailed Kite migration routes</p>
+				<p>Migration routes</p>
 
                 <div id="viz-wrapper">
 

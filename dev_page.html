@@ -64,20 +64,37 @@
             color: white;
             cursor: pointer;
         }
-        .annotation path {
+        .annotation-group .connector,
+        .annotation-group .note-line {
             stroke: white;
             stroke-width: 2;
             fill: none;
         }
-        .annotation rect {
+        .annotation-group .annotation-note-label,
+        .annotation-group .annotation-note-title {
+            fill: white;
+            font-family: sans-serif;
+        }
+        .annotation-group .annotation-note-label {
+            font-size: 12px;
+        }
+        .annotation-group .annotation-note-title {
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .annotation-group .annotation-note-bg {
             fill: rgba(0, 0, 0, 0.85);
             stroke: white;
             stroke-width: 1;
+            rx: 6px;
         }
-        .annotation text {
+        .annotation-group .connector-end {
+            stroke: white;
             fill: white;
-            font-size: 12px;
-            font-family: sans-serif;
+        }
+        .annotation-group .subject {
+            fill: #ff7f0e;
+            stroke: none;
         }
     </style>
     <!--  -->
@@ -91,6 +108,7 @@
                 <!-- custom HTML starts here -->
 
                 <script src="https://d3js.org/d3.v7.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js" integrity="sha512-iBAeBWWWFb8HqSBcrqcz98iIpuVH1la39dEYHtyQ/pGpeCQTQVvLJOWAuhv2Q7JSHp9k7hWA7sGxU3hHJe+tFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                 <script src='https://unpkg.com/topojson-client@3'></script>
                 <!-- <style> circle {fill: royalblue; stroke: black;} </style> -->
 
@@ -154,8 +172,6 @@
                         const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
                         const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
                         const annotationLayer = svg.append("g").attr("class", "annotation-layer");
-                        let annotationVisible = false;
-                        const annotationTarget = { lon: -80.5, lat: 26.5 }; // Florida region
 
                         const latLabelShift = 70;  // shift latitude-line labels rightward (pixels)
                         const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
@@ -194,6 +210,22 @@
                         let data_bwh;
                         let layerSTK;
                         let layerBWH;
+
+                        let annotationVisible = false;
+
+                        const annotationDefs = [
+                            {
+                                id: "florida-hotspot",
+                                lon: -80.5,
+                                lat: 26.5,
+                                dx: 30,
+                                dy: -70,
+                                title: "A key migration hotspot",
+                                label: "Florida region",
+                                wrap: 140
+                            }
+                        ];
+                        let activeAnnotationIds = ["florida-hotspot"]; // which defs are currently shown
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -248,7 +280,7 @@
 
                             updateChart(x, y);
 
-                            d3.select("#show-annotation").on("click", showAnnotation);
+                            d3.select("#show-annotation").on("click", () => showAnnotation());
 
                             // zoom and pan
                             const zoom = d3.zoom()
@@ -278,50 +310,39 @@
                         function updateAnnotation() {
                             if (!projection || !annotationVisible) return;
 
-                            const [x, y] = projection([annotationTarget.lon, annotationTarget.lat]);
+                            const activeDefs = annotationDefs.filter(a => activeAnnotationIds.includes(a.id));
 
-                            const boxX = x + 28;
-                            const boxY = y - 70;
+                            const annotations = activeDefs.map(a => {
+                                const [x, y] = projection([a.lon, a.lat]);
+                                return {
+                                    note: {
+                                        label: a.label,
+                                        title: a.title,
+                                        wrap: a.wrap ?? 140
+                                    },
+                                    x,
+                                    y,
+                                    dx: a.dx,
+                                    dy: a.dy,
+                                    connector: { end: "arrow" },
+                                    subject: { radius: 5 }
+                                };
+                            });
 
-                            annotationLayer.selectAll("*").remove();
+                            const makeAnnotations = d3.annotation()
+                                                      .type(d3.annotationLabel)
+                                                      .annotations(annotations);
 
-                            const g = annotationLayer.append("g").attr("class", "annotation");
+                            annotationLayer.selectAll(".annotation-group").remove();
 
-                            g.append("path")
-                              .attr("d", `M ${x} ${y} L ${boxX + 8} ${boxY + 14}`);
-
-                            g.append("circle")
-                             .attr("cx", x)
-                             .attr("cy", y)
-                             .attr("r", 5)
-                             .attr("fill", "#ff7f0e");
-
-                            const box = g.append("g");
-
-                            box.append("rect")
-                               .attr("x", boxX)
-                               .attr("y", boxY)
-                               .attr("width", 150)
-                               .attr("height", 54)
-                               .attr("rx", 6);
-
-                            const txt = box.append("text")
-                                           .attr("x", boxX + 12)
-                                           .attr("y", boxY + 24);
-
-                            txt.append("tspan")
-                               .attr("x", boxX + 12)
-                               .attr("dy", 0)
-                               .text("Florida region");
-
-                            txt.append("tspan")
-                               .attr("x", boxX + 12)
-                               .attr("dy", 16)
-                               .text("A key migration hotspot");
+                            annotationLayer.append("g")
+                                           .attr("class", "annotation-group")
+                                           .call(makeAnnotations);
                         }
 
-                        function showAnnotation() {
+                        function showAnnotation(ids = activeAnnotationIds) {
                             annotationVisible = true;
+                            activeAnnotationIds = ids;
                             updateAnnotation();
                         }
 
