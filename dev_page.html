@@ -457,49 +457,36 @@
                             updateSidebarAnnotation();
                             updateMapAnnotation();
 
-                            d3.select("#narr-forward").on("click", function() {
+                            d3.select("#narr-forward").on("click", async function() {
                                 if (currentStep === 0) {
+                                    // Optional: prevent double-click during animation
+                                    d3.select(this).property("disabled", true);
 
-                                    // Jump slider to week 42 alongside the zoom.
-                                    const startWeek = selectedWeek;
-                                    const endWeek = 42;
+                                    // Clear intro annotations first (optional, but cleaner)
+                                    await showAnnotations({ sidebar: [], map: [] });
 
-                                    d3.transition()
-                                      .duration(1500)
-                                      .tween("week", () => {
-                                          const interpolate = d3.interpolateNumber(startWeek, endWeek);
-                                          return (t) => {
-                                              const week = Math.round(interpolate(t));
-                                              if (week !== selectedWeek) {
-                                                  selectedWeek = week;
-                                                  d3.select("#week-slider").property("value", week);
-                                                  d3.select("#week-label").text(`Week ${week}`);
+                                    // 1) week slider
+                                    await animateWeekSlider(42, 1500);
 
-                                                  const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
-                                                  const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
+                                    // 2) zoom
+                                    await zoomToLonLat(-85, 5, 1.9, 2500);
 
-                                                  updateChart(x, y);
-                                              }
-                                          };
-                                      });
-
-
-                                    updateChart(x, y);
-
-                                    // Zoom in centered on (lat 10, lon -77).
-                                    zoomToLonLat(-85, 5, 1.9, 2500);
-                                    showAnnotations({
+                                    // 3) annotations
+                                    await showAnnotations({
                                         sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                                     });
-                                    d3.select(this).text("Next");
 
-                                    setControlsLocked(false); // narrative complete — unlock free exploration
+                                    d3.select(this).text("Next").property("disabled", false);
+                                    // updateChart(x, y);
+                                    setControlsLocked(false);
                                     currentStep = 1;
                                 }
-                                // else if (currentStep === 1) { /* step 2 logic */ currentStep = 2; }
+
+                                // else if (currentStep === 1) { ... }
 
                                 // Add more steps here as you build out the narrative.
+
 
                             });
 
@@ -528,6 +515,23 @@
 
                         }
 
+                        function animateWeekSlider(targetWeek, duration = 700) {
+                            const slider = d3.select("#week-slider");
+                            const start = +slider.property("value");
+                            const end = +targetWeek;
+                            const interp = d3.interpolateNumber(start, end);
+
+                            // Drive slider + existing input handler
+                            return d3.transition()
+                                     .duration(duration)
+                                     .tween("week-slider", () => t => {
+                                         const v = Math.round(interp(t));
+                                         slider.property("value", v).dispatch("input");
+                                     })
+                                     .end()
+                                     .catch(() => {});
+                        }
+
                         function clampTransform(transform) {
                             const [[x0, y0], [x1, y1]] = [[0, 0], [mapWidth, mapHeight]];
                             const k = transform.k;
@@ -544,9 +548,11 @@
                                                    .translate(-px, -py);
                             const targetTransform = clampTransform(rawTransform);
 
-                            svg.transition()
-                               .duration(duration)
-                               .call(zoomBehavior.transform, targetTransform);
+                            return svg.transition()
+                                      .duration(duration)
+                                      .call(zoomBehavior.transform, targetTransform)
+                                      .end()
+                                      .catch(() => {});
                         }
 
                         function setControlsLocked(locked) {
@@ -562,7 +568,7 @@
                         }
 
                         function updateMapAnnotation() {
-                            if (!projection) return;
+                            if (!projection) return Promise.resolve();
 
                             const activeDefs = mapAnnotationDefs.filter(a => activeMapAnnotationIds.includes(a.id));
                             const connectorEndScale = 3;
@@ -593,17 +599,19 @@
                                               .style("opacity", 0)
                                               .remove();
 
-                            if (annotations.length === 0) return;
+                            if (!annotations.length) return Promise.resolve();
                             const newGroup = mapAnnotationLayer.append("g")
                                               .attr("class", "annotation-group")
                                               .style("opacity", 0)
                                               .call(makeAnnotations);
 
+                            mapAnnotationLayer.raise(); // keep annotations above hex grid
                             newGroup.transition()
                                     .duration(300)
-                                    .style("opacity", 1);
+                                    .style("opacity", 1)
+                                    .end()
+                                    .catch(() => {});
 
-                            mapAnnotationLayer.raise(); // keep annotations above hex grid
                         }
 
                         function updateSidebarAnnotation() {
@@ -632,28 +640,36 @@
                                                   .style("opacity", 0)
                                                   .remove();
 
-                            if (annotations.length === 0) return;
+                            if (!annotations.length) return Promise.resolve();
 
                             const newGroup = sidebarAnnotationLayer.append("g")
                                                   .attr("class", "annotation-group")
                                                   .style("opacity", 0)
                                                   .call(makeAnnotations);
 
-                            newGroup.transition()
-                                    .duration(300)
-                                    .style("opacity", 1);
+                            return newGroup.transition()
+                                           .duration(300)
+                                           .style("opacity", 1)
+                                           .end()
+                                           .catch(() => {});
                         }
 
                         function showAnnotations({ map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {}) {
                             activeMapAnnotationIds = map;
                             activeSidebarAnnotationIds = sidebar;
-                            updateMapAnnotation();
-                            updateSidebarAnnotation();
+                            return Promise.all([updateMapAnnotation(), updateSidebarAnnotation()]);
                         }
 
                         function hideAnnotations() {
                             mapAnnotationLayer.selectAll("*").remove();
                             sidebarAnnotationLayer.selectAll("*").remove();
+                        }
+
+                        // Example step runner: week -> zoom -> annotations
+                        async function runNarrativeStep(step) {
+                            await animateWeekSlider(step.week, 700);
+                            await zoomToLonLat(step.lon, step.lat, step.scale, 800);
+                            await showAnnotations({ map: step.mapAnnIds, sidebar: step.sidebarAnnIds });
                         }
 
                         function resetVisualization() {
