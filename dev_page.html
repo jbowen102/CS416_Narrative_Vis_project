@@ -1,12 +1,12 @@
-
-
-
-
-
-
-
-
-
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
 <html>
     <style>
         body {
@@ -15,19 +15,6 @@
         }
         #viz-wrapper {
             position: relative;
-        }
-        .tooltip {
-            position: absolute;
-            pointer-events: none;
-            opacity: 0;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 14px;
-            line-height: 1.4;
-            z-index: 1000;
-            white-space: nowrap;
         }
         .map-path {
             fill: rgb(51, 51, 51);
@@ -55,11 +42,48 @@
             stroke: #333;
             stroke-width: 1.5px;
         }
+        .tooltip {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.4;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+        .narrative-button {
+            margin: 8px 0 12px 0;
+            padding: 6px 10px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+        .annotation path {
+            stroke: white;
+            stroke-width: 2;
+            fill: none;
+        }
+        .annotation rect {
+            fill: rgba(0, 0, 0, 0.85);
+            stroke: white;
+            stroke-width: 1;
+        }
+        .annotation text {
+            fill: white;
+            font-size: 12px;
+            font-family: sans-serif;
+        }
     </style>
-
-
-
-
+    <!--  -->
+    <!--  -->
+    <!--  -->
+    <!--  -->
     <div id="primary" class="content-area grid-100 tablet-grid-100 mobile-grid-100">
 		<main id="main" class="site-main" role="main">
             <div class="entry-content special-page-content">
@@ -70,10 +94,12 @@
                 <script src='https://unpkg.com/topojson-client@3'></script>
                 <!-- <style> circle {fill: royalblue; stroke: black;} </style> -->
 
-                <p>Swallow-tailed Kite migration routes</p>
+                <p>Migration routes</p>
 
                 <div id="viz-wrapper">
-
+                    <button id="show-annotation" class="narrative-button" type="button">
+                        Start Exploring
+                    </button>
                     <input id="week-slider" type="range" min="27" max="48" value="27">
                     <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
                     <span id="week-label">Week 27</span>
@@ -127,6 +153,9 @@
                         const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
                         const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
                         const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
+                        const annotationLayer = svg.append("g").attr("class", "annotation-layer");
+                        let annotationVisible = false;
+                        const annotationTarget = { lon: -80.5, lat: 26.5 }; // Florida region
 
                         const latLabelShift = 70;  // shift latitude-line labels rightward (pixels)
                         const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
@@ -219,6 +248,8 @@
 
                             updateChart(x, y);
 
+                            d3.select("#show-annotation").on("click", showAnnotation);
+
                             // zoom and pan
                             const zoom = d3.zoom()
                                            .scaleExtent([1, 4]) // min/max zoom
@@ -228,7 +259,9 @@
                                                    currentTransform = event.transform;
                                                    mapLayer.attr("transform", currentTransform);
                                                    dataLayer.attr("transform", currentTransform);
+                                                   annotationLayer.attr("transform", currentTransform); // stay attached to map
                                                    updateLabelTransform();
+                                                   if (annotationVisible) updateAnnotation();
                                            });
 
                             svg.call(zoom);
@@ -240,6 +273,61 @@
                             makeLabels(lat_range, lon_range);
                             updateLabelTransform();
 
+                        }
+
+                        function updateAnnotation() {
+                            if (!projection || !annotationVisible) return;
+
+                            const [x, y] = projection([annotationTarget.lon, annotationTarget.lat]);
+
+                            const boxX = x + 28;
+                            const boxY = y - 70;
+
+                            annotationLayer.selectAll("*").remove();
+
+                            const g = annotationLayer.append("g").attr("class", "annotation");
+
+                            g.append("path")
+                              .attr("d", `M ${x} ${y} L ${boxX + 8} ${boxY + 14}`);
+
+                            g.append("circle")
+                             .attr("cx", x)
+                             .attr("cy", y)
+                             .attr("r", 5)
+                             .attr("fill", "#ff7f0e");
+
+                            const box = g.append("g");
+
+                            box.append("rect")
+                               .attr("x", boxX)
+                               .attr("y", boxY)
+                               .attr("width", 150)
+                               .attr("height", 54)
+                               .attr("rx", 6);
+
+                            const txt = box.append("text")
+                                           .attr("x", boxX + 12)
+                                           .attr("y", boxY + 24);
+
+                            txt.append("tspan")
+                               .attr("x", boxX + 12)
+                               .attr("dy", 0)
+                               .text("Florida region");
+
+                            txt.append("tspan")
+                               .attr("x", boxX + 12)
+                               .attr("dy", 16)
+                               .text("A key migration hotspot");
+                        }
+
+                        function showAnnotation() {
+                            annotationVisible = true;
+                            updateAnnotation();
+                        }
+
+                        function hideAnnotation() {
+                            annotationVisible = false;
+                            annotationLayer.selectAll("*").remove();
                         }
 
                         // Render each species in its own layer so both are visible
@@ -403,6 +491,7 @@
                                     .attr("class", "map-path")
                                     .attr("d", path);
                         }
+
                     </script>
 
 
