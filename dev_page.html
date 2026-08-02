@@ -61,7 +61,7 @@
             z-index: 1000;
             white-space: nowrap;
         }
-        .narrative-button {
+        .narrative-button-fwd {
             position: absolute;
             top: 0;
             left: 500px; /* mapWidth, aligns button above the sidebar */
@@ -70,7 +70,20 @@
             padding: 6px 10px;
             border: 1px solid #999;
             border-radius: 4px;
-            background: #222;
+            background: #134607;
+            color: white;
+            cursor: pointer;
+        }
+        .narrative-button-reset {
+            position: absolute;
+            top: 30px;
+            width: 80px;
+            left: calc(500px + 200px - 80px); /* mapWidth + sidebarWidth - button width */
+            margin: 0;
+            padding: 6px 10px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            background: #502020;
             color: white;
             cursor: pointer;
         }
@@ -125,8 +138,11 @@
                 <p>Migration routes</p>
 
                 <div id="viz-wrapper">
-                    <button id="show-annotation" class="narrative-button" type="button">
+                    <button id="narr-forward" class="narrative-button-fwd" type="button">
                         Start Exploring
+                    </button>
+                    <button id="narr-reset" class="narrative-button-reset" type="button">
+                        Reset
                     </button>
                     <input id="week-slider" type="range" min="27" max="48" value="27">
                     <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
@@ -235,11 +251,13 @@
                         let lat_range;
                         let lon_range;
 
+                        let firstWeek;
                         let selectedWeek;
                         let data_stk;
                         let data_bwh;
                         let layerSTK;
                         let layerBWH;
+                        let zoomBehavior;
 
                         const mapAnnotationDefs = [
                             {
@@ -259,7 +277,7 @@
                             {
                                 id: "intro-note",
                                 x: 20,
-                                y: 0,
+                                y: 10,
                                 title: "Welcome",
                                 label: "Click Start Exploring to see how these two raptor species migrate each Fall.",
                                 wrap: 160
@@ -281,7 +299,8 @@
                             data_stk = await d3.csv(`${dataDir}/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
                             data_bwh = await d3.csv(`${dataDir}/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
 
-                            selectedWeek = d3.min(data_stk, d => d.week + 1);
+                            firstWeek = d3.min(data_stk, d => d.week + 1);
+                            selectedWeek = firstWeek;
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
 
                             lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
@@ -328,24 +347,26 @@
                             updateSidebarAnnotation();
                             updateMapAnnotation();
 
-                            d3.select("#show-annotation").on("click", () => {
+                            d3.select("#narr-forward").on("click", () => {
                                 showAnnotations({ sidebar: [],
                                                   map: ["florida-hotspot"] });
                             });
 
-                            // zoom and pan
-                            const zoom = d3.zoom()
-                                           .scaleExtent([1, 4]) // min/max zoom
-                                           .extent([[0, 0], [mapWidth, mapHeight]]) // define the area in which zooming is allowed
-                                           .translateExtent([[0,0],[mapWidth, mapHeight]]) // limit panning to given area
-                                           .on("zoom", (event) => {
-                                                   currentTransform = event.transform;
-                                                   mapLayer.attr("transform", currentTransform);
-                                                   dataLayer.attr("transform", currentTransform);
-                                                   updateLabelTransform();
-                                           });
+                            d3.select("#narr-reset").on("click", resetVisualization);
 
-                            svg.call(zoom);
+                            // zoom and pan
+                            zoomBehavior = d3.zoom()
+                                             .scaleExtent([1, 4]) // min/max zoom
+                                             .extent([[0, 0], [mapWidth, mapHeight]]) // define the area in which zooming is allowed
+                                             .translateExtent([[0,0],[mapWidth, mapHeight]]) // limit panning to given area
+                                             .on("zoom", (event) => {
+                                                     currentTransform = event.transform;
+                                                     mapLayer.attr("transform", currentTransform);
+                                                     dataLayer.attr("transform", currentTransform);
+                                                     updateLabelTransform();
+                                             });
+
+                            svg.call(zoomBehavior);
 
                             d3.json(`${dataDir}/countries-50m.json`) // from https://github.com/topojson/world-atlas
                               .then(drawMap)
@@ -448,6 +469,28 @@
                         function hideAnnotations() {
                             mapAnnotationLayer.selectAll("*").remove();
                             sidebarAnnotationLayer.selectAll("*").remove();
+                        }
+
+                        function resetVisualization() {
+                            // Reset controls to their initial values.
+                            d3.select("#week-slider").property("value", firstWeek);
+                            d3.select("#week-label").text(`Week ${firstWeek}`);
+                            d3.select("#chk-stk").property("checked", true);
+                            d3.select("#chk-bwh").property("checked", true);
+
+                            const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
+                            const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
+                            // TODO make these global
+                            updateChart(x, y);
+
+                            // Reset zoom/pan to identity.
+                            svg.transition()
+                               .duration(300)
+                               .call(zoomBehavior.transform, d3.zoomIdentity);
+
+                            // Reset annotations to initial (intro note only, no map annotation).
+                            showAnnotations({ sidebar: ["intro-note"],
+                                              map: [] });
                         }
 
                         // Render each species in its own layer so both are visible
