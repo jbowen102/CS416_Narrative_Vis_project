@@ -244,8 +244,10 @@
                             const hexSel = dataLayer.selectAll(".data-hex")
                                                     .data(mergedWeek, d => d.cell);
                             hexSel.exit()
+                                  .interrupt()
                                   .transition().ease(d3.easeCubicIn).duration(300)
                                   .attr("fill-opacity", 0)
+                                  .attr("stroke-opacity", 0)
                                   .remove();
                                   // https://d3js.org/d3-ease
                             // new circles needed for new data points
@@ -255,6 +257,7 @@
                                                    .attr("class", "data-hex")
                                                    .attr("d", d => makeHexPath(d.cell_ctr_lon, d.cell_ctr_lat, hexRadiusKm))
                                                    .attr("stroke", "gainsboro")
+                                                   .attr("stroke-opacity", 0)
                                                    .attr("fill-opacity", 0);
                             // now include circles that were already there AND in new data (so not exited)
                             const hexMerged = hexEnter.merge(hexSel)
@@ -262,12 +265,14 @@
                                                       .attr("fill", d => getHexColor(getHexState(d)))
                                                       //   .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
                                                       .attr("fill-opacity", 0)
+                                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
                                                       .on("pointermove", (event, d) => showTooltip(event, d))
                                                       .on("pointerleave", hideTooltip);
                             hexMerged.transition()
                                      .ease(d3.easeCubicOut).duration(300)
-                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85);
+                                     .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 0.85)
+                                     .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
 
                         }
 
