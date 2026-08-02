@@ -13,6 +13,62 @@ get_header(); ?>
 			<?php while ( have_posts() ) : the_post(); ?>
 			<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 
+            <style>
+                #viz-wrapper {
+                    position: relative;
+                }
+                .tooltip {
+                    position: absolute;
+                    pointer-events: none;
+                    opacity: 0;
+                    background: rgba(0, 0, 0, 0.85);
+                    color: white;
+                    padding: 8px 10px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    line-height: 1.4;
+                    z-index: 1000;
+                    white-space: nowrap;
+                }
+                .map-path {
+                    fill: rgb(51, 51, 51);
+                    fill-opacity: 0.8;
+                    stroke: lightgrey;
+                    vector-effect: non-scaling-stroke;
+                }
+                .data-hex {
+                    stroke: gainsboro;
+                    stroke-opacity: 0.3;
+                    vector-effect: non-scaling-stroke;
+                }
+                .stk-hex {
+                    fill: royalblue;
+                    /* fill-opacity: 0.7; */
+                }
+                .bwh-hex {
+                    fill: orange;
+                    /* fill-opacity: 0.7; */
+                }
+                circle {
+                    vector-effect: non-scaling-stroke;
+                }
+                .graticule {
+                    fill: none;
+                    stroke: #ccc;
+                    stroke-width: .5px;
+                }
+                .graticule-label {
+                    fill: white;
+                    font-size: 18px;
+                    pointer-events: none;
+                }
+                .foreground {
+                    fill: none;
+                    stroke: #333;
+                    stroke-width: 1.5px;
+                }
+            </style>
+
 			<header class="entry-header">
 				<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
 			</header><!-- .entry-header -->
@@ -21,8 +77,8 @@ get_header(); ?>
 
 				<!-- custom HTML starts here -->
 
-				<script src='https://d3js.org/d3.v5.min.js'></script>
-				<!-- <style> circle {fill: royalblue; stroke: black;} </style> -->
+                <script src="https://d3js.org/d3.v7.min.js"></script>
+                <script src='https://unpkg.com/topojson-client@3'></script>
 				<!-- <img src="<?php echo esc_url( content_url( '/uploads/2026/07/stk_mockup-300x300.png.webp' ) ); ?>" alt="Narrative visualization image" style="max-width:100%; height:auto; margin:1rem 0;" /> -->
 
 				<p>Swallow-tailed Kite migration routes</p>
@@ -37,168 +93,296 @@ get_header(); ?>
                         <label><input type="checkbox" id="chk-bwh" checked> Broad-winged Hawk</label>
                     </div>
                     </br>
-                    <svg width="1200" height="1200">
 
-					</svg>
+                    <div id="tooltip" class="tooltip"></div>
+                    <svg id="map"></svg>
 
                     <script>
-						window.addEventListener("load", init);
-						
-                        let margin = 70;
-                        let selectedWeek = 27;
-                        d3.select("#week-label").text(`Week ${selectedWeek}`);
-						
-                        let data_stk;
-                        let data_bwh;
-                        let chartLayer;
-                        let layerSTK;
-                        let layerBWH;
-                        const svg = d3.select("svg");
-						
-                        async function init() {
-							data_stk = await d3.csv("/data/CS416_NVis_project/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
-                            data_bwh = await d3.csv("/data/CS416_NVis_project/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
+                        window.addEventListener("load", init);
 
-                            const plot_height = 1000;
-                            const plot_width = 1000;
+                        const dataDir = "/data/CS416_NVis_project";
 
-                            const x = d3.scaleLinear()
-                                .domain([-109, -50])
-                                .range([0, plot_width]);
-                                // expanded longitude range by 1 degree West to un-crowd axis
-                                
-                                const y = d3.scaleLinear()
-                                .domain([-16, 40])
-                                .range([plot_height, 0]);// expanded latitude range by 1 degree South to un-crowd axis
+                        const svg = d3.select("#map");
+                        const svgWidth = 500;
+                        const svgHeight = 550;
+                        svg.attr("width", svgWidth)
+                           .attr("height", svgHeight);
 
-                            chartLayer = svg.append("g")
-                                .attr("transform", "translate(" + margin + "," + margin + ")");
+                        const map_scale = 530;
+                        const latMapOffset = 23;  // shift map leftward in SVG window
+                        const vertMapOffset = 5;  // shift map downward in SVG window
+                        const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
+                        const hexRadiusKm = hexSpacingKm / 2;
 
-                            // separate groups per species so both can be shown simultaneously
-                            layerSTK = chartLayer.append("g").attr("class", "layer-stk");
-                            layerBWH = chartLayer.append("g").attr("class", "layer-bwh");
+                        function makeHexPath(lon, lat, radiusKm) {
+                            const [cx, cy] = projection([lon, lat]);
 
-                            // set up axes
-                            chartLayer.append("g")
-                                    .call(d3.axisLeft(y));
-                            chartLayer.append("g")
-                                    .attr("transform", "translate(0," + plot_height + ")")
-                                    .call(d3.axisBottom(x));
+                            // convert km to degrees for the hex corners
+                            const radiusLat = radiusKm / 111.32;
+                            const radiusLon = radiusKm / (111.32 * Math.cos(lat * Math.PI / 180));
 
-                            d3.select("#week-slider")
-                            .on("input", function () { selectedWeek = +this.value;
-                                                        d3.select("#week-label").text(`Week ${selectedWeek}`);
-                                                        updateChart2(x, y);
-                                                        }
-                                );
-
-                            // update when species selection changes
-                            d3.selectAll("#chk-stk, #chk-bwh").on("change", function() {
-                                updateChart2(x, y);
+                            const points = d3.range(6).map(i => {
+                                const angle = (Math.PI / 3) * i - Math.PI / 6;
+                                const lon2 = lon + Math.cos(angle) * radiusLon;
+                                const lat2 = lat + Math.sin(angle) * radiusLat;
+                                return projection([lon2, lat2]);
                             });
 
-                            updateChart2(x, y);
-
+                            const p = d3.path();
+                            p.moveTo(points[0][0], points[0][1]);
+                            for (let i = 1; i < points.length; i++) p.lineTo(points[i][0], points[i][1]);
+                            p.closePath();
+                            return p.toString();
                         }
 
-                        function updateChart(x, y) {
-                            // assemble weekData from selected species
-                            const stkChecked = d3.select("#chk-stk").property("checked");
-                            const bwhChecked = d3.select("#chk-bwh").property("checked");
+                        const mapLayer = svg.append("g").attr("class", "map-layer");     // zoomable layer
+                        const labelLayer = svg.append("g").attr("class", "label-layer"); // lat/lon labels
+                        const dataLayer = svg.append("g").attr("class", "data-layer");   // all species are within this layer, but each in their own nested layer defined below
 
-                            let weekData = [];
-                            if (stkChecked && data_stk) {
-                                weekData = weekData.concat(
-                                    data_stk.filter(d => Number(d.week) === selectedWeek)
-                                        .map(d => Object.assign({}, d, { species: 'stk' }))
-                                );
-                            }
-                            if (bwhChecked && data_bwh) {
-                                weekData = weekData.concat(
-                                    data_bwh.filter(d => Number(d.week) === selectedWeek)
-                                        .map(d => Object.assign({}, d, { species: 'bwh' }))
-                                );
-                            }
+                        const latLabelShift = 55;  // shift latitude-line labels rightward (pixels)
+                        const lonLabelShift = 25;  // shift longitude-line labels upward (pixels)
 
-                            const circles = chartLayer.selectAll("circle")
-                                .data(weekData, d => d.species + "-" + d.cell);
+                        const wrapper = d3.select("#viz-wrapper");
+                        const tooltip = wrapper.select("#tooltip");
 
-                            circles.exit()
-                                .transition()
-                                .duration(300)
-                                .style("opacity", 0)
-                                .remove();
+                        function showTooltip(event, d) {
+                            const fmt = d3.format(".3f");
+                            tooltip.html(` <strong>${fmt(d.cell_ctr_lat)}°, ${fmt(d.cell_ctr_lon)}°</strong><br/>
+                                           Country (primary): ${d.country_code}<br/>
+                                           Complete checklists: ${d.n_checklists}<br/>
+                                           Checklists w/ species: ${d.n_detected}<br/>
+                                           Cumulative # reported: ${d.tot_observed}<br/>
+                                           `).style("opacity", 0.85);
+                                           //    Checklists w/ species: ${Math.round(d.det_freq*100)}%<br/>
 
-                            const enterCircles = circles.enter()
-                                .append("circle")
-                                .attr("cx", d => x(d.cell_ctr_lon))
-                                .attr("cy", d => y(d.cell_ctr_lat))
-                                .attr("r", 4)
-                                .style("opacity", 0)
-                                .attr("stroke", "gainsboro")
-								.attr("stroke-opacity", 0.3)
-                                .attr("fill", "none");
+                            const [x, y] = d3.pointer(event, wrapper.node());
+                            tooltip.style("left", `${x + 12}px`)
+                                   .style("top", `${y + 12}px`);
+                        }
 
-                            enterCircles.merge(circles)
-                                .attr("cx", d => x(d.cell_ctr_lon))
-                                .attr("cy", d => y(d.cell_ctr_lat))
-                                .attr("r", 4)
-                                .transition()
-                                .duration(300)
-                                .style("opacity", 1)
-                                .attr("fill", d => d.det_freq > 0 ? (d.species === 'stk' ? "royalblue" : "orange") : "none")
-                                .attr("stroke", "gainsboro")
-								.attr("stroke-opacity", 0.3);
+                        function hideTooltip() {
+                            tooltip.style("opacity", 0);
+                        }
+
+                        let graticule;
+                        let path;
+                        let projection;
+                        let currentTransform = d3.zoomIdentity;
+                        let lat_range;
+                        let lon_range;
+
+                        let selectedWeek;
+                        let data_stk;
+                        let data_bwh;
+                        let layerSTK;
+                        let layerBWH;
+
+                        function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
+
+                        function colorScale(freq_range, color) {
+                            return d3.scaleLinear()
+                                .domain([0, d3.max(freq_range)])
+                                .range(['white', color])
+                        }
+
+                        async function init() {
+                            data_stk = await d3.csv(`${dataDir}/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_bwh = await d3.csv(`${dataDir}/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
+
+                            selectedWeek = d3.min(data_stk, d => d.week + 1);
+                            d3.select("#week-label").text(`Week ${selectedWeek}`);
+
+                            lat_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lat));
+                            lon_range = d3.extent(data_stk, d => Math.round(d.cell_ctr_lon));
+                            // https://observablehq.com/@d3/d3-extent
+                            const centerLon = latMapOffset + (lon_range[0]-1 + lon_range[1]) / 2;
+                            const centerLat = vertMapOffset + (lat_range[0]-1 + lat_range[1]) / 2;
+                            // expanded longitude range by 1 degree West to un-crowd axis
+                            // expanded latitude range by 1 degree South to un-crowd axis
+
+                            projection = d3.geoMercator()
+                                           .center([centerLon, centerLat])
+                                           .scale(map_scale);
+                            path = d3.geoPath()
+                                     .projection(projection);
+                            graticule = d3.geoGraticule();
+
+                            // instead of a d3 "scale" function, using a projection to map lat/lon to pixels
+                            const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
+                            const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
+
+                            // each species on its own layer
+                            layerSTK = dataLayer.append("g").attr("class", "layer-stk");
+                            layerBWH = dataLayer.append("g").attr("class", "layer-bwh");
+
+                            // update when date selection changes
+                            d3.select("#week-slider")
+                              .on("input", function() { selectedWeek = +this.value;
+                                                        d3.select("#week-label").text(`Week ${selectedWeek}`);
+                                                        updateChart(x, y);
+                                           });
+                                // "this" refers to whatever DOM element triggered the event.
+                                // "this.value" is the value of the slider (as str, so convert to number w/ +).
+
+                            // update when species selection changes
+                            d3.selectAll("#chk-stk, #chk-bwh")
+                              .on("change", function() { updateChart(x, y); });
+
+                            updateChart(x, y);
+
+                            // zoom and pan
+                            const zoom = d3.zoom()
+                                        .scaleExtent([1, 4]) // min/max zoom
+                                        .extent([[0, 0], [svgWidth, svgHeight]]) // define the area in which zooming is allowed
+                                        .translateExtent([[0,0],[svgWidth, svgHeight]]) // limit panning to given area
+                                        .on("zoom", (event) => {
+                                                currentTransform = event.transform;
+                                                mapLayer.attr("transform", currentTransform);
+                                                dataLayer.attr("transform", currentTransform);
+                                                updateLabelTransform();
+                                        });
+
+                            svg.call(zoom);
+
+                            d3.json(`${dataDir}/countries-50m.json`) // from https://github.com/topojson/world-atlas
+                              .then(drawMap)
+                              .catch(console.error);
+
+                            makeLabels(lat_range, lon_range);
+                            updateLabelTransform();
 
                         }
 
                         // Render each species in its own layer so both are visible
-                        function updateChart2(x, y) {
+                        function updateChart(x, y) {
                             const stkChecked = d3.select("#chk-stk").property("checked");
                             const bwhChecked = d3.select("#chk-bwh").property("checked");
 
-                            const stkWeek = stkChecked && data_stk ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
-                            const bwhWeek = bwhChecked && data_bwh ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
+                            const stkWeek = (stkChecked && data_stk) ? data_stk.filter(d => Number(d.week) === selectedWeek) : [];
+                            const bwhWeek = (bwhChecked && data_bwh) ? data_bwh.filter(d => Number(d.week) === selectedWeek) : [];
+
+                            let stkWeek_freq_range = [0, d3.max(stkWeek, d => d.det_freq) || 0];
+                            let bwhWeek_freq_range = [0, d3.max(bwhWeek, d => d.det_freq) || 0];
 
                             // STK
-                            const stkSel = layerSTK.selectAll("circle").data(stkWeek, d => d.cell);
-                            stkSel.exit().transition().duration(300).style("opacity", 0).remove();
-                            const stkEnter = stkSel.enter().append("circle")
-                                .attr("cx", d => x(d.cell_ctr_lon))
-                                .attr("cy", d => y(d.cell_ctr_lat))
-                                .attr("r", 4)
-                                .style("opacity", 0)
-                                .attr("stroke", "gainsboro")
-								.attr("stroke-opacity", 0.3);
-                            stkEnter.merge(stkSel)
-                                .attr("cx", d => x(d.cell_ctr_lon))
-                                .attr("cy", d => y(d.cell_ctr_lat))
-                                .transition().duration(300)
-                                .style("opacity", 1)
-                                .attr("fill", d => d.det_freq > 0 ? "royalblue" : "none");
+                            // const stkSel = layerSTK.selectAll("circle")
+                            const stkSel = layerSTK.selectAll(".data-hex")
+                                                   .data(stkWeek, d => d.cell);
+                            // Transition out the points no longer in the data
+                            stkSel.exit()
+                                  .transition().ease(d3.easeCubicIn).duration(300)
+                                  .style("opacity", 0)
+                                  .remove();
+                                  // https://d3js.org/d3-ease
+                            // new circles needed for new data points
+                            // starting with invisible fill
+                            const stkEnter = stkSel.enter()
+                                                   .append("path")
+                                                   .attr("class", "data-hex stk-hex")
+                                                   .attr("d", d => makeHexPath(d.cell_ctr_lon, d.cell_ctr_lat, hexRadiusKm))
+                                                   .attr("stroke", "gainsboro")
+                                                // .attr("fill", d => colorScale(stkWeek_freq_range, "royalblue")(d.det_freq))
+                                                   .attr("fill-opacity", 0);
+                            // now include circles that were already there AND in new data (so not exited)
+                            const stkMerged = stkEnter.merge(stkSel)
+                                                      .style("opacity", 1)
+                                                      .on("pointerenter", (event, d) => showTooltip(event, d))
+                                                      .on("pointermove", (event, d) => showTooltip(event, d))
+                                                      .on("pointerleave", hideTooltip);
+                            stkMerged.transition()
+                                     .ease(d3.easeCubicOut).duration(300)
+                                     .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0)
 
                             // BWH
-                            const bwhSel = layerBWH.selectAll("circle").data(bwhWeek, d => d.cell);
-                            bwhSel.exit().transition().duration(300).style("opacity", 0).remove();
-                            const bwhEnter = bwhSel.enter().append("circle")
-                                .attr("cx", d => x(d.cell_ctr_lon))
-                                .attr("cy", d => y(d.cell_ctr_lat))
-                                .attr("r", 4)
-                                .style("opacity", 0)
-                                .attr("stroke", "gainsboro")
-								.attr("stroke-opacity", 0.3);
-                            bwhEnter.merge(bwhSel)
-                                .attr("cx", d => x(d.cell_ctr_lon))
-                                .attr("cy", d => y(d.cell_ctr_lat))
-                                .transition().duration(300)
-                                .style("opacity", 1)
-								.attr("stroke-opacity", 0.3)
-                                .attr("fill", d => d.det_freq > 0 ? "orange" : "none");
+                            // const bwhSel = layerBWH.selectAll("circle")
+                            const bwhSel = layerBWH.selectAll(".data-hex")
+                                                   .data(bwhWeek, d => d.cell);
+                            bwhSel.exit()
+                                  .transition().ease(d3.easeCubicIn).duration(300)
+                                  .style("opacity", 0)
+                                  .remove();
+
+                            const bwhEnter = bwhSel.enter()
+                                                   .append("path")
+                                                   .attr("class", "data-hex bwh-hex")
+                                                   .attr("d", d => makeHexPath(d.cell_ctr_lon, d.cell_ctr_lat, hexRadiusKm))
+                                                   .attr("stroke", "gainsboro")
+                                                // .attr("fill", d => colorScale(bwhWeek_freq_range, "orange")(d.det_freq))
+                                                   .attr("fill-opacity", 0);
+                            const bwhMerged = bwhEnter.merge(bwhSel)
+                                                      .style("opacity", 1)
+                                                      .on("pointerenter", (event, d) => showTooltip(event, d))
+                                                      .on("pointermove", (event, d) => showTooltip(event, d))
+                                                      .on("pointerleave", hideTooltip);
+                            bwhMerged.transition()
+                                     .ease(d3.easeCubicOut).duration(300)
+                                     .attr("fill-opacity", d => d.det_freq > 0 ? 1 : 0)
                         }
 
+                        function makeLabels(lat_range, lon_range) {
+                            labelLayer.selectAll("*").remove();
 
+                            const lonValues = d3.range(Math.ceil(lon_range[0] / 10) * 10, lon_range[1] + 1, 10);
+                            const lonLabels = lonValues.map(lon => {
+                                const p = projection([lon, lat_range[0]]);
+                                return p ? { text: `${lon}°`, x: p[0], y: p[1] - lonLabelShift, anchor: "middle" } : null;
+                            }).filter(Boolean);
 
+                            labelLayer.selectAll(".lon-label")
+                                      .data(lonLabels)
+                                      .enter()
+                                      .append("text")
+                                      .attr("class", "graticule-label lon-label")
+                                      .attr("data-x", d => d.x)
+                                      .attr("data-y", d => d.y)
+                                      .attr("text-anchor", "middle")
+                                      .text(d => d.text);
+
+                            const latValues = d3.range(Math.ceil(lat_range[0] / 10) * 10, lat_range[1] + 1, 10);
+                            const latLabels = latValues.map(lat => {
+                                const p = projection([lon_range[0], lat]);
+                                return p ? { text: `${lat}°`, x: p[0] + latLabelShift, y: p[1] - 5, anchor: "end" } : null;
+                            }).filter(Boolean);
+
+                            labelLayer.selectAll(".lat-label")
+                                      .data(latLabels)
+                                      .enter()
+                                      .append("text")
+                                      .attr("class", "graticule-label lat-label")
+                                      .attr("data-x", d => d.x)
+                                      .attr("data-y", d => d.y)
+                                      .attr("text-anchor", "end")
+                                      .text(d => d.text);
+                        }
+
+                        function updateLabelTransform() {
+                            const k = currentTransform.k || 1;
+                            labelLayer.selectAll("text")
+                                      .attr("transform", function () {
+                                          const x = +this.getAttribute("data-x");
+                                          const y = +this.getAttribute("data-y");
+                                          return `translate(${currentTransform.applyX(x)}, ${currentTransform.applyY(y)})`;
+                            });
+                        }
+
+                        function drawMap(world) {
+                            mapLayer.append("path")
+                                    .datum(graticule())
+                                    .attr("class", "graticule")
+                                    .attr("d", path);
+
+                            const countries = topojson.feature(world, world.objects.countries).features;
+
+                            mapLayer.append("g")
+                                    .selectAll("path")
+                                    .data(countries)
+                                    .enter()
+                                    .append("path")
+                                    .attr("class", "map-path")
+                                    .attr("d", path);
+                        }
                     </script>
+
 
 				</div> <!-- viz-wrapper -->
 

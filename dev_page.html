@@ -87,6 +87,8 @@
                     <script>
                         window.addEventListener("load", init);
 
+                        const dataDir = "source_data_upload";
+
                         const svg = d3.select("#map");
                         const svgWidth = 500;
                         const svgHeight = 550;
@@ -171,8 +173,8 @@
                         }
 
                         async function init() {
-                            data_stk = await d3.csv("source_data_upload/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
-                            data_bwh = await d3.csv("source_data_upload/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv", d3.autoType);
+                            data_stk = await d3.csv(`${dataDir}/swallow_tailed_kite_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_bwh = await d3.csv(`${dataDir}/broad_winged_hawk_compl_exp_range_20260729_zf_clean_agg_weekly.csv`, d3.autoType);
 
                             selectedWeek = d3.min(data_stk, d => d.week + 1);
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
@@ -229,7 +231,7 @@
 
                             svg.call(zoom);
 
-                            d3.json("source_data/countries-50m.json")
+                            d3.json(`${dataDir}/countries-50m.json`) // from https://github.com/topojson/world-atlas
                               .then(drawMap)
                               .catch(console.error);
 
