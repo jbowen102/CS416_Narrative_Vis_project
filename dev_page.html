@@ -130,6 +130,12 @@
             font-size: 13px;
             font-weight: bold;
         }
+        .sidebar-annotation-layer .annotation-note-label {
+            font-size: 14px;
+        }
+        .sidebar-annotation-layer .annotation-note-title {
+            font-size: 15px;
+        }
         .annotation-group .annotation-note-bg {
             fill: rgba(0, 0, 0, 0.85);
             stroke: none;
@@ -383,7 +389,7 @@
                             {
                                 id: "msk-breeding-ground",
                                 lat: 34.75, lon: -90.0,
-                                dx: 200, dy: 50,
+                                dx: 200, dy: 60,
                                 title: "",
                                 label: "Mississippi Kite breeding grounds"
                             },
@@ -437,7 +443,7 @@
                             {
                                 id: "intro-note",
                                 x: 20,
-                                y: 10,
+                                y: 35,
                                 title: "Welcome",
                                 label: "Click 'Start Exploring' to see how these two raptor species migrate each Fall.",
                                 wrap: 160
@@ -445,14 +451,14 @@
                             {
                                 id: "guided-int-note",
                                 x: 20,
-                                y: 90,
+                                y: 145,
                                 label: "Map and data controls will be unlocked after guided portion.",
                                 wrap: 160
                             },
                             {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 200,
+                                y: svgHeight / 2 - 220,
                                 title: "INTRO",
                                 label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
                                 wrap: 160
@@ -460,7 +466,7 @@
                             {
                                 id: "hex-presence-note",
                                 x: 20,
-                                y: svgHeight / 2 - 100,
+                                y: svgHeight / 2 - 110,
                                 title: "",
                                 label: "A missing cell outline indicates no checklists were collected in that area this week.",
                                 wrap: 160
@@ -476,7 +482,7 @@
                             {
                                 id: "zoom-pan-note",
                                 x: 20,
-                                y: svgHeight / 2 + 30,
+                                y: svgHeight / 2 + 40,
                                 title: "",
                                 label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
                                 wrap: 160
@@ -500,7 +506,7 @@
                             {
                                 id: "msk-no-detections-note",
                                 x: 20,
-                                y: svgHeight / 8 + 65,
+                                y: svgHeight / 8 + 45,
                                 title: "",
                                 label: "Mississippi kites travel in groups over land instead of crossing the Gulf or Caribbean in their journey to South America.",
                                 wrap: 160
@@ -516,7 +522,7 @@
                             {
                                 id: "osp-intro-note",
                                 x: 20,
-                                y: svgHeight / 8,
+                                y: svgHeight / 8 - 10,
                                 title: "",
                                 label: "Now let's compare to the Osprey, which uses a different migration strategy.",
                                 wrap: 160
@@ -532,7 +538,7 @@
                             {
                                 id: "osp-caribbean-note",
                                 x: 20,
-                                y: svgHeight / 8 + 130,
+                                y: svgHeight / 8 + 100,
                                 title: "",
                                 label: "However, Osprey also start appearing in larger numbers in the Caribbean.",
                                 wrap: 160
@@ -631,7 +637,7 @@
                                     await animateWeekSlider(42, 1500);
 
                                     // 2) zoom
-                                    await zoomToLonLat(-85, 5, 1.9, 2500);
+                                    await zoomToLonLat(-85, 5.7, 1.9, 2500);
 
                                     // 3) annotations
                                     await showAnnotationsStaggered({
@@ -723,12 +729,12 @@
                                     setMapInteractionLocked(true);
 
                                     // 1) Transition out scene 4 annotations.
-                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await showAnnotations({ sidebar: ["msk-overland-note"], map: [] });
                                     await sleep(250);
 
                                     // 2) Add new Mississippi Kite scene annotation.
                                     await showAnnotations({
-                                        sidebar: [],
+                                        sidebar: ["msk-overland-note"],
                                         map: ["msk-no-staging-florida"]
                                     });
 
@@ -873,6 +879,9 @@
 
                                     // Keep current annotations and animate a tighter Caribbean zoom.
                                     await zoomToLonLat(-71.246, 19.352, 2, 1800);
+                                    await showAnnotations({
+                                        sidebar: ["osp-caribbean-note"]
+                                    });
 
                                     // Keep data controls locked for the next guided scene.
                                     setControlsLocked(true);
@@ -890,7 +899,7 @@
                                     setMapInteractionLocked(true);
 
                                     // 1) Remove the current map and sidebar annotations.
-                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await showAnnotations({ sidebar: ["osp-caribbean-note"], map: [] });
                                     await sleep(250);
 
                                     // 2) Slowly move to late fall.
