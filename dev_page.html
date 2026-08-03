@@ -177,10 +177,10 @@
                     </button>
 
                     <div class="control-wrap" id="week-slider-wrap">
-                        <input id="week-slider" type="range" min="27" max="48" value="27">
-                        <!-- TODO  Can this be converted to dynamic based off the data week range?      -->
+                        <!-- <input id="week-slider" type="range" min="27" max="48" value="27"> -->
+                        <input id="week-slider" type="range" min="31" max="43" value="31">
                     </div>
-                    <span id="week-label">Week 27</span>
+                    <span id="week-label">Week 31</span>
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
@@ -403,7 +403,7 @@
                                 lat: 26.759, lon: -80.921,
                                 dx: 115, dy: -62,
                                 title: "",
-                                label: "No \"staging\" activity"
+                                label: "No real \"staging\" activity"
                             },
                             {
                                 id: "osp-breeding-ground",
@@ -422,7 +422,7 @@
                             {
                                 id: "osp-increased-detections-dr",
                                 lat: 18.926, lon: -70.394,
-                                dx: 65, dy: -55,
+                                dx: 25, dy: -55,
                                 title: "",
                                 label: "More detections"
                             }
@@ -523,7 +523,7 @@
                                 x: 20,
                                 y: svgHeight / 8 + 80,
                                 title: "",
-                                label: "Osprey can be found throughout North America (breeding up through northern Canada and Alaska) during the warmer months",
+                                label: "Osprey can be found throughout North America (breeding up through northern Canada and Alaska) during the warmer months.",
                                 wrap: 160
                             },
                             {
@@ -531,7 +531,15 @@
                                 x: 20,
                                 y: svgHeight / 8 + 130,
                                 title: "",
-                                label: "However, Osprey also start appearing in larger numbers in the Caribbean",
+                                label: "However, Osprey also start appearing in larger numbers in the Caribbean.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-powered-flight-note",
+                                x: 20,
+                                y: svgHeight / 8 + 170,
+                                title: "",
+                                label: "The Osprey's powerful wings allow it to cross the Gulf and Caribbean with ease, flying sometimes as long as 24-48 hrs at a time, and it has no trouble catching a fishy meal along the way.",
                                 wrap: 160
                             }
 
@@ -845,10 +853,56 @@
                                         map: ["osp-increased-detections-dr"]
                                     });
 
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 8;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 8) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // Keep current annotations and animate a tighter Caribbean zoom.
+                                    await zoomToLonLat(-71.246, 19.352, 2, 1800);
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 9;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 9) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Remove the current map and sidebar annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Slowly move to late fall.
+                                    await animateWeekSlider(43, 3000);
+
+                                    // 3) Add sidebar-only explanatory note.
+                                    await showAnnotations({
+                                        sidebar: ["osp-powered-flight-note"],
+                                        map: []
+                                    });
+
                                     // New final scene reached: unlock controls for free exploration.
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
-                                    currentStep = 8;
+                                    currentStep = 10;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
