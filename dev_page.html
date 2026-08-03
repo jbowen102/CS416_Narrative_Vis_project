@@ -456,11 +456,19 @@
                                 wrap: 160
                             },
                             {
+                                id: "zoom-pan-note",
+                                x: 20,
+                                y: 220,
+                                title: "",
+                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
+                                wrap: 160
+                            },
+                            {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 220,
+                                y: svgHeight / 2 - 240,
                                 title: "INTRO",
-                                label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
+                                label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week (see slider at top left).",
                                 wrap: 160
                             },
                             {
@@ -472,19 +480,18 @@
                                 wrap: 160
                             },
                             {
-                                id: "hover-note",
+                                id: "agg-info-note",
                                 x: 20,
-                                y: svgHeight / 2 - 20,
-                                title: "",
-                                label: "Hover over each cell to see more details.",
+                                y: 260,
+                                label: "Data aggregated by week, across years from early 2000s to Mar 2026.",
                                 wrap: 160
                             },
                             {
-                                id: "zoom-pan-note",
+                                id: "hover-note",
                                 x: 20,
-                                y: svgHeight / 2 + 40,
+                                y: 340,
                                 title: "",
-                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
+                                label: "Hover over each cell to see more details.",
                                 wrap: 160
                             },
                             {
@@ -562,7 +569,7 @@
 
                         ];
 
-                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
+                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-and-pan-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -627,7 +634,7 @@
                             setResetButtonLocked(true);
 
                             // Show intro note immediately; map annotation stays hidden until button click.
-                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
+                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-pan-note"];
                             activeMapAnnotationIds = [];
                             updateSidebarAnnotation();
                             updateMapAnnotation();
@@ -649,7 +656,7 @@
 
                                     // 3) annotations
                                     await showAnnotationsStaggered({
-                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "agg-info-note"],
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                                     });
 
@@ -1189,7 +1196,7 @@
                             await animateWeekSlider(step.week, 700);
                             await zoomToLonLat(step.lon, step.lat, step.scale, 800);
                             await showAnnotationsStaggered({
-                                sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "agg-info-note"],
                                 map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                             }, 2000);
                         }
