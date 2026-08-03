@@ -550,6 +550,14 @@
                                 title: "",
                                 label: "The Osprey's powerful wings allow it to cross the Gulf and Caribbean with ease, flying sometimes as long as 24-48 hrs at a time, and it has no trouble catching a fishy meal along the way.",
                                 wrap: 160
+                            },
+                            {
+                                id: "final-explore-note",
+                                x: 20,
+                                y: svgHeight / 8,
+                                title: "",
+                                label: "Now use the week slider and species toggles to explore observation distributions throughout the fall migration!",
+                                wrap: 160
                             }
 
                         ];
@@ -911,10 +919,42 @@
                                         map: []
                                     });
 
+                                    // Keep controls locked for one more guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 10;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 10) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Zoom back out.
+                                    await svg.transition()
+                                             .duration(1200)
+                                             .call(zoomBehavior.transform, d3.zoomIdentity)
+                                             .end()
+                                             .catch(() => {});
+
+                                    // 2) Switch on both species.
+                                    setSpeciesSelection(true, true);
+                                    updateChart(x, y);
+
+                                    // 3) Add final sidebar guidance note in addition to existing scene content.
+                                    await showAnnotations({
+                                        sidebar: ["final-explore-note"],
+                                        map: []
+                                    });
+
                                     // New final scene reached: unlock controls for free exploration.
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
-                                    currentStep = 10;
+                                    currentStep = 11;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
@@ -1175,7 +1215,7 @@
                             showAnnotations({ sidebar: ["intro-note", "guided-int-note"],
                                               map: [] });
 
-                            d3.select("#narr-forward").text("Start Exploring").property("disabled", false).classed("is-explore", false); // reset button text
+                            d3.select("#narr-forward").text("Start the Tour").property("disabled", false).classed("is-explore", false); // reset button text
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
