@@ -399,6 +399,13 @@
                                 label: "No detections"
                             },
                             {
+                                id: "msk-no-staging-florida",
+                                lat: 26.759, lon: -80.921,
+                                dx: 115, dy: -62,
+                                title: "",
+                                label: "No \"staging\" activity"
+                            },
+                            {
                                 id: "osp-breeding-ground",
                                 lat: 39.50, lon: -84.350,
                                 dx: 150, dy: 120,
@@ -704,6 +711,31 @@
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
+                                    // 1) Transition out scene 4 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Add new Mississippi Kite scene annotation.
+                                    await showAnnotations({
+                                        sidebar: [],
+                                        map: ["msk-no-staging-florida"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 4;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 4) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
                                     // 1) Clear scene 4 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
@@ -720,12 +752,12 @@
                                     // Keep data controls locked for the next guided scene.
                                     setControlsLocked(true);
                                     setMapInteractionLocked(false);
-                                    currentStep = 4;
+                                    currentStep = 5;
 
                                     d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
                                 }
 
-                                else if (currentStep === 4) {
+                                else if (currentStep === 5) {
                                     d3.select(this).property("disabled", true);
 
                                     // Keep interactions locked while scene transition runs.
@@ -763,12 +795,12 @@
                                     // Keep data controls locked for the next guided scene.
                                     setControlsLocked(true);
                                     setMapInteractionLocked(false);
-                                    currentStep = 5;
+                                    currentStep = 6;
 
                                     d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
                                 }
 
-                                else if (currentStep === 5) {
+                                else if (currentStep === 6) {
                                     d3.select(this).property("disabled", true);
 
                                     // Keep interactions locked while scene transition runs.
@@ -816,7 +848,7 @@
                                     // New final scene reached: unlock controls for free exploration.
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
-                                    currentStep = 6;
+                                    currentStep = 8;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
