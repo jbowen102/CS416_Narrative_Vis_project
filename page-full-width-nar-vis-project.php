@@ -419,7 +419,7 @@ get_header(); ?>
                             {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 140,
+                                y: svgHeight / 2 - 200,
                                 title: "INTRO",
                                 label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
                                 wrap: 160
@@ -427,7 +427,7 @@ get_header(); ?>
                             {
                                 id: "hex-presence-note",
                                 x: 20,
-                                y: svgHeight / 2 - 40,
+                                y: svgHeight / 2 - 100,
                                 title: "",
                                 label: "A missing cell outline indicates no checklists were collected in that area this week.",
                                 wrap: 160
@@ -435,7 +435,7 @@ get_header(); ?>
                             {
                                 id: "hover-note",
                                 x: 20,
-                                y: svgHeight / 2 + 40,
+                                y: svgHeight / 2 - 20,
                                 title: "",
                                 label: "Hover over each cell to see more details.",
                                 wrap: 160
@@ -443,7 +443,7 @@ get_header(); ?>
                             {
                                 id: "zoom-pan-note",
                                 x: 20,
-                                y: svgHeight / 2 + 90,
+                                y: svgHeight / 2 + 30,
                                 title: "",
                                 label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
                                 wrap: 160
@@ -599,8 +599,8 @@ get_header(); ?>
                                              .end()
                                              .catch(() => {});
 
-                                    // 3) Move week slider back to week 30.
-                                    await animateWeekSlider(30);
+                                    // 3) Move week slider back to week 31.
+                                    await animateWeekSlider(31);
                                     await sleep(700);
 
                                     // 4) Show only Mississippi kite data.
