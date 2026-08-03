@@ -408,9 +408,16 @@
                             {
                                 id: "osp-funnel-texas",
                                 lat: 29.000, lon: -97.500,
-                                dx: 260, dy: -40,
+                                dx: 260, dy: -45,
                                 title: "",
                                 label: "Some Osprey start to funnel through the same corridor as other species follow…"
+                            },
+                            {
+                                id: "osp-increased-detections-dr",
+                                lat: 18.926, lon: -70.394,
+                                dx: 65, dy: -55,
+                                title: "",
+                                label: "More detections"
                             }
                         ];
                         let activeMapAnnotationIds = [];
@@ -510,6 +517,14 @@
                                 y: svgHeight / 8 + 80,
                                 title: "",
                                 label: "Osprey can be found throughout North America (breeding up through northern Canada and Alaska) during the warmer months",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-caribbean-note",
+                                x: 20,
+                                y: svgHeight / 8 + 130,
+                                title: "",
+                                label: "However, Osprey also start appearing in larger numbers in the Caribbean",
                                 wrap: 160
                             }
 
@@ -771,6 +786,31 @@
                                     await showAnnotations({
                                         sidebar: [],
                                         map: ["osp-funnel-texas"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 7;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 7) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Transition out scene 7 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Keep week slider where it is; add scene 8 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["osp-caribbean-note"],
+                                        map: ["osp-increased-detections-dr"]
                                     });
 
                                     // New final scene reached: unlock controls for free exploration.
