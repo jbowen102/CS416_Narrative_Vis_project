@@ -107,6 +107,9 @@ get_header(); ?>
                     color: white;
                     cursor: pointer;
                 }
+                .narrative-button-reset:not(:disabled):not(.is-disabled):hover {
+                    background: #936fff98;
+                }
                 .narrative-button-reset.is-disabled {
                     background: #666;
                     cursor: not-allowed;
@@ -581,6 +584,7 @@ get_header(); ?>
 
                             firstWeek = d3.min(data_msk, d => d.week + 1);
                             selectedWeek = firstWeek;
+                            d3.select("#week-slider").property("value", selectedWeek);
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
 
                             lat_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lat));
