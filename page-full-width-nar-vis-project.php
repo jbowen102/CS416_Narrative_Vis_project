@@ -130,6 +130,12 @@ get_header(); ?>
                     font-size: 13px;
                     font-weight: bold;
                 }
+                .sidebar-annotation-layer .annotation-note-label {
+                    font-size: 14px;
+                }
+                .sidebar-annotation-layer .annotation-note-title {
+                    font-size: 15px;
+                }
                 .annotation-group .annotation-note-bg {
                     fill: rgba(0, 0, 0, 0.85);
                     stroke: none;
@@ -169,16 +175,18 @@ get_header(); ?>
 
                 <div id="viz-wrapper">
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
-                        Start Exploring
+                        Start The Tour
                     </button>
                     <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
                         Reset
                     </button>
 
                     <div class="control-wrap" id="week-slider-wrap">
-                        <input id="week-slider" type="range" min="27" max="48" value="27">
+
+                        <input id="week-slider" type="range" min="31" max="43" value="31">
+
                     </div>
-                    <span id="week-label">Week 27</span>
+                    <span id="week-label">Week 31</span>
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
@@ -307,9 +315,6 @@ get_header(); ?>
                                            Complete checklists: ${d.n_checklists}<br/>
                                            ${speciesLines}
                                            `).style("opacity", 0.85);
-                                        // Checklists w/ species: ${d.n_detected}<br/>
-                                        // Cumulative # reported: ${d.tot_observed}<br/>
-                                        // Checklists w/ species: ${Math.round(d.det_freq*100)}%<br/>
 
                             const [x, y] = d3.pointer(event, wrapper.node());
                             tooltip.style("left", `${x + 12}px`)
@@ -342,14 +347,15 @@ get_header(); ?>
                             {
                                 id: "ex-mississippi-kite",
                                 lat: 12.031, lon: -86.599,
-                                dx: -17, dy: 18,
+                                dx: -17, dy: 15,
                                 title: "",
-                                label: "Mississippi Kite"
+                                label: "Mississippi Kite",
+                                textColor: "#12eb1f"
                             },
                             {
                                 id: "ex-neither",
                                 lat: 9.659, lon: -73.688,
-                                dx: -5, dy: -38,
+                                dx: -10, dy: -35,
                                 title: "",
                                 label: "neither"
                             },
@@ -358,34 +364,36 @@ get_header(); ?>
                                 lat: 6.027, lon: -77.698,
                                 dx: -65, dy: 30 ,
                                 title: "",
-                                label: "Osprey"
+                                label: "Osprey",
+                                textColor: "#926fff"
                             },
-
                             {
                                 id: "ex-both",
                                 lat: 9.261, lon: -84.068,
                                 dx: -40, dy: 20,
                                 title: "",
-                                label: "both"
+                                label: "both",
+                                textColor: "#41e2f5"
                             },
                             {
                                 id: "ex-no-data",
                                 lat: -3.638, lon: -76.122,
                                 dx: -70, dy: 25,
                                 title: "",
-                                label: "[no data]"
+                                label: "[no data]",
+                                textColor: "#999"
                             },
                             {
                                 id: "msk-breeding-ground",
                                 lat: 34.75, lon: -90.0,
-                                dx: 200, dy: 50,
+                                dx: 200, dy: 60,
                                 title: "",
                                 label: "Mississippi Kite breeding grounds"
                             },
                             {
                                 id: "msk-overland-migration",
                                 lat: 17.253, lon: -91.001,
-                                dx: 200, dy: -100,
+                                dx: 200, dy: -90,
                                 title: "",
                                 label: "Overland migration begins"
                             },
@@ -395,6 +403,34 @@ get_header(); ?>
                                 dx: 80, dy: -65,
                                 title: "",
                                 label: "No detections"
+                            },
+                            {
+                                id: "msk-no-staging-florida",
+                                lat: 26.759, lon: -80.921,
+                                dx: 115, dy: -62,
+                                title: "",
+                                label: "No real \"staging\" activity"
+                            },
+                            {
+                                id: "osp-breeding-ground",
+                                lat: 39.50, lon: -84.350,
+                                dx: 150, dy: 120,
+                                title: "",
+                                label: "Osprey summer range"
+                            },
+                            {
+                                id: "osp-funnel-texas",
+                                lat: 29.000, lon: -97.500,
+                                dx: 260, dy: -45,
+                                title: "",
+                                label: "Some Osprey start to funnel through the same corridor other species follow…"
+                            },
+                            {
+                                id: "osp-increased-detections-dr",
+                                lat: 18.926, lon: -70.394,
+                                dx: 20, dy: -55,
+                                title: "",
+                                label: "More detections"
                             }
                         ];
                         let activeMapAnnotationIds = [];
@@ -404,24 +440,32 @@ get_header(); ?>
                             {
                                 id: "intro-note",
                                 x: 20,
-                                y: 10,
+                                y: 35,
                                 title: "Welcome",
-                                label: "Click 'Start Exploring' to see how these two raptor species migrate each Fall.",
+                                label: "Click 'Start the Tour' to see how these two raptor species migrate each Fall.",
                                 wrap: 160
                             },
                             {
                                 id: "guided-int-note",
                                 x: 20,
-                                y: 90,
+                                y: 145,
                                 label: "Map and data controls will be unlocked after guided portion.",
+                                wrap: 160
+                            },
+                            {
+                                id: "zoom-pan-note",
+                                x: 20,
+                                y: 220,
+                                title: "",
+                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
                                 wrap: 160
                             },
                             {
                                 id: "color-scale-note",
                                 x: 20,
-                                y: svgHeight / 2 - 200,
+                                y: svgHeight / 2 - 240,
                                 title: "INTRO",
-                                label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week.",
+                                label: "Each hex cell is colored to indicate if species was observed on an eBird checklist this week (see slider at top left).",
                                 wrap: 160
                             },
                             {
@@ -433,19 +477,18 @@ get_header(); ?>
                                 wrap: 160
                             },
                             {
-                                id: "hover-note",
+                                id: "agg-info-note",
                                 x: 20,
-                                y: svgHeight / 2 - 20,
-                                title: "",
-                                label: "Hover over each cell to see more details.",
+                                y: 260,
+                                label: "Data aggregated by week, across years from early 2000s to Mar 2026.",
                                 wrap: 160
                             },
                             {
-                                id: "zoom-pan-note",
+                                id: "hover-note",
                                 x: 20,
-                                y: svgHeight / 2 + 30,
+                                y: 350,
                                 title: "",
-                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
+                                label: "Hover over each cell to see more details.",
                                 wrap: 160
                             },
                             {
@@ -467,7 +510,7 @@ get_header(); ?>
                             {
                                 id: "msk-no-detections-note",
                                 x: 20,
-                                y: svgHeight / 8 + 65,
+                                y: svgHeight / 8 + 45,
                                 title: "",
                                 label: "Mississippi kites travel in groups over land instead of crossing the Gulf or Caribbean in their journey to South America.",
                                 wrap: 160
@@ -477,13 +520,52 @@ get_header(); ?>
                                 x: 20,
                                 y: svgHeight / 2 - 30,
                                 title: "",
-                                label: "These raptors rely on air currents (\"thermals\") that form over land to help them travel; they are unable to sustain powered flight for long enough to cross this much open water.",
+                                label: "These raptors rely on air currents (\"thermals\") that form only over land to help them travel. Their physiology doesn't lend itself to prolonged powered flight, so they are unable to cross large bodies of water.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-intro-note",
+                                x: 20,
+                                y: svgHeight / 8 - 10,
+                                title: "",
+                                label: "Now let's compare to the Osprey, which uses a different migration strategy.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-breeding-note",
+                                x: 20,
+                                y: svgHeight / 8 + 80,
+                                title: "",
+                                label: "Osprey can be found throughout North America (breeding up through northern Canada and Alaska) during the warmer months.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-caribbean-note",
+                                x: 20,
+                                y: svgHeight / 8 + 100,
+                                title: "",
+                                label: "However, Osprey also start appearing in larger numbers in the Caribbean.",
+                                wrap: 160
+                            },
+                            {
+                                id: "osp-powered-flight-note",
+                                x: 20,
+                                y: svgHeight / 8 + 170,
+                                title: "",
+                                label: "The Osprey's powerful wings allow it to cross the Gulf and Caribbean with ease, flying sometimes as long as 24-48 hrs at a time, and it has no trouble catching a fishy meal along the way.",
+                                wrap: 160
+                            },
+                            {
+                                id: "final-explore-note",
+                                x: 20,
+                                y: svgHeight / 8,
+                                title: "",
+                                label: "Now use the week slider and species toggles to explore observation distributions throughout the Fall migration!",
                                 wrap: 160
                             }
-
                         ];
 
-                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
+                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-and-pan-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -548,7 +630,7 @@ get_header(); ?>
                             setResetButtonLocked(true);
 
                             // Show intro note immediately; map annotation stays hidden until button click.
-                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
+                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-pan-note"];
                             activeMapAnnotationIds = [];
                             updateSidebarAnnotation();
                             updateMapAnnotation();
@@ -566,11 +648,11 @@ get_header(); ?>
                                     await animateWeekSlider(42, 1500);
 
                                     // 2) zoom
-                                    await zoomToLonLat(-85, 5, 1.9, 2500);
+                                    await zoomToLonLat(-85, 5.7, 1.9, 2500);
 
                                     // 3) annotations
                                     await showAnnotationsStaggered({
-                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                        sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "agg-info-note"],
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                                     });
 
@@ -657,6 +739,31 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
+                                    // 1) Transition out scene 4 annotations.
+                                    await showAnnotations({ sidebar: ["msk-overland-note"], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Add new Mississippi Kite scene annotation.
+                                    await showAnnotations({
+                                        sidebar: ["msk-overland-note"],
+                                        map: ["msk-no-staging-florida"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 4;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 4) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
                                     // 1) Clear scene 4 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
@@ -670,16 +777,190 @@ get_header(); ?>
                                         map: ["msk-no-detections"]
                                     });
 
-                                    // Final guided scene reached: unlock controls for free exploration.
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 5;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 5) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 5 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 1.5) Toggle off all species as a reset
+                                    setSpeciesSelection(false, false);
+                                    updateChart(x, y);
+
+                                    // 2) Zoom all the way out and move slider to week 30.
+                                    await Promise.all([
+                                        svg.transition()
+                                           .duration(1000)
+                                           .call(zoomBehavior.transform, d3.zoomIdentity)
+                                           .end()
+                                           .catch(() => {}),
+                                        animateWeekSlider(31)
+                                    ]);
+
+                                    // 3) Switch to Osprey-only.
+                                    setSpeciesSelection(false, true);
+                                    updateChart(x, y);
+
+                                    // 4) Add scene 6 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["osp-breeding-note", "osp-intro-note"],
+                                        map: ["osp-breeding-ground"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 6;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 6) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Clear scene 6 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Slowly move week slider to week 37.
+                                    await animateWeekSlider(37, 2600);
+
+                                    // 3) Add scene 7 map annotation.
+                                    await showAnnotations({
+                                        sidebar: [],
+                                        map: ["osp-funnel-texas"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 7;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 7) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Transition out scene 7 annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Keep week slider where it is; add scene 8 annotations.
+                                    await showAnnotations({
+                                        sidebar: ["osp-caribbean-note"],
+                                        map: ["osp-increased-detections-dr"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 8;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 8) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // Keep current annotations and animate a tighter Caribbean zoom.
+                                    await zoomToLonLat(-71.246, 19.352, 2, 1800);
+                                    await showAnnotations({
+                                        sidebar: ["osp-caribbean-note"]
+                                    });
+
+                                    // Keep data controls locked for the next guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 9;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 9) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Remove the current map and sidebar annotations.
+                                    await showAnnotations({ sidebar: ["osp-caribbean-note"], map: [] });
+                                    await sleep(250);
+
+                                    // 2) Slowly move to late fall.
+                                    await animateWeekSlider(43, 3000);
+
+                                    // 3) Add sidebar-only explanatory note.
+                                    await showAnnotations({
+                                        sidebar: ["osp-powered-flight-note"],
+                                        map: []
+                                    });
+
+                                    // Keep controls locked for one more guided scene.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(false);
+                                    currentStep = 10;
+
+                                    d3.select(this).text("Next").property("disabled", false).classed("is-explore", false);
+                                }
+
+                                else if (currentStep === 10) {
+                                    d3.select(this).property("disabled", true);
+
+                                    // Keep interactions locked while scene transition runs.
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+
+                                    // 1) Zoom back out.
+                                    await svg.transition()
+                                             .duration(1200)
+                                             .call(zoomBehavior.transform, d3.zoomIdentity)
+                                             .end()
+                                             .catch(() => {});
+
+                                    // 2) Switch on both species.
+                                    setSpeciesSelection(true, true);
+                                    updateChart(x, y);
+
+                                    // 3) Add final sidebar guidance note in addition to existing scene content.
+                                    await showAnnotations({
+                                        sidebar: ["final-explore-note"],
+                                        map: []
+                                    });
+
+                                    // New final scene reached: unlock controls for free exploration.
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
-                                    currentStep = 4;
+                                    currentStep = 11;
 
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
-
-                                // Add more steps here as you build out the narrative.
-
 
                             });
 
@@ -818,6 +1099,16 @@ get_header(); ?>
                                               .style("opacity", 0)
                                               .call(makeAnnotations);
 
+                            // Color-map specific annotation text where requested.
+                            newGroup.selectAll("g.annotation")
+                                .each(function(_, i) {
+                                const color = activeDefs[i]?.textColor;
+                                if (!color) return;
+                                d3.select(this)
+                                    .selectAll(".annotation-note-label, .annotation-note-title")
+                                    .style("fill", color);
+                                });
+
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
                             newGroup.transition()
                                     .duration(600)
@@ -898,7 +1189,7 @@ get_header(); ?>
                             await animateWeekSlider(step.week, 700);
                             await zoomToLonLat(step.lon, step.lat, step.scale, 800);
                             await showAnnotationsStaggered({
-                                sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "zoom-pan-note"],
+                                sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "agg-info-note"],
                                 map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
                             }, 2000);
                         }
@@ -923,7 +1214,7 @@ get_header(); ?>
                             showAnnotations({ sidebar: ["intro-note", "guided-int-note"],
                                               map: [] });
 
-                            d3.select("#narr-forward").text("Start Exploring").property("disabled", false).classed("is-explore", false); // reset button text
+                            d3.select("#narr-forward").text("Start the Tour").property("disabled", false).classed("is-explore", false); // reset button text
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
@@ -1094,7 +1385,6 @@ get_header(); ?>
                         }
 
                     </script>
-
 				</div> <!-- viz-wrapper -->
 
 				<!-- custom HTML ends here -->

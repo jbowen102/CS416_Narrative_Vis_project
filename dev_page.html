@@ -170,13 +170,12 @@
                 <script src="https://d3js.org/d3.v7.min.js"></script>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js" integrity="sha512-iBAeBWWWFb8HqSBcrqcz98iIpuVH1la39dEYHtyQ/pGpeCQTQVvLJOWAuhv2Q7JSHp9k7hWA7sGxU3hHJe+tFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                 <script src='https://unpkg.com/topojson-client@3'></script>
-                <!-- <style> circle {fill: royalblue; stroke: black;} </style> -->
 
                 <p>Comparing Raptor Fall Migration Preferences</p>
 
                 <div id="viz-wrapper">
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
-                        Start Exploring
+                        Start the Tour
                     </button>
                     <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
                         Reset
@@ -315,9 +314,6 @@
                                            Complete checklists: ${d.n_checklists}<br/>
                                            ${speciesLines}
                                            `).style("opacity", 0.85);
-                                        // Checklists w/ species: ${d.n_detected}<br/>
-                                        // Cumulative # reported: ${d.tot_observed}<br/>
-                                        // Checklists w/ species: ${Math.round(d.det_freq*100)}%<br/>
 
                             const [x, y] = d3.pointer(event, wrapper.node());
                             tooltip.style("left", `${x + 12}px`)
@@ -358,7 +354,7 @@
                             {
                                 id: "ex-neither",
                                 lat: 9.659, lon: -73.688,
-                                dx: -15, dy: -35,
+                                dx: -10, dy: -35,
                                 title: "",
                                 label: "neither"
                             },
@@ -426,12 +422,12 @@
                                 lat: 29.000, lon: -97.500,
                                 dx: 260, dy: -45,
                                 title: "",
-                                label: "Some Osprey start to funnel through the same corridor as other species follow…"
+                                label: "Some Osprey start to funnel through the same corridor other species follow…"
                             },
                             {
                                 id: "osp-increased-detections-dr",
                                 lat: 18.926, lon: -70.394,
-                                dx: 25, dy: -55,
+                                dx: 20, dy: -55,
                                 title: "",
                                 label: "More detections"
                             }
@@ -445,7 +441,7 @@
                                 x: 20,
                                 y: 35,
                                 title: "Welcome",
-                                label: "Click 'Start Exploring' to see how these two raptor species migrate each Fall.",
+                                label: "Click 'Start the Tour' to see how these two raptor species migrate each Fall.",
                                 wrap: 160
                             },
                             {
@@ -474,7 +470,7 @@
                             {
                                 id: "hex-presence-note",
                                 x: 20,
-                                y: svgHeight / 2 - 110,
+                                y: svgHeight / 2 - 100,
                                 title: "",
                                 label: "A missing cell outline indicates no checklists were collected in that area this week.",
                                 wrap: 160
@@ -489,7 +485,7 @@
                             {
                                 id: "hover-note",
                                 x: 20,
-                                y: 340,
+                                y: 350,
                                 title: "",
                                 label: "Hover over each cell to see more details.",
                                 wrap: 160
@@ -563,10 +559,9 @@
                                 x: 20,
                                 y: svgHeight / 8,
                                 title: "",
-                                label: "Now use the week slider and species toggles to explore observation distributions throughout the fall migration!",
+                                label: "Now use the week slider and species toggles to explore observation distributions throughout the Fall migration!",
                                 wrap: 160
                             }
-
                         ];
 
                         let activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-and-pan-note"];
@@ -966,9 +961,6 @@
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
 
-                                // Add more steps here as you build out the narrative.
-
-
                             });
 
                             d3.select("#narr-reset").on("click", resetVisualization);
@@ -1106,15 +1098,15 @@
                                               .style("opacity", 0)
                                               .call(makeAnnotations);
 
-                                // Color-map specific annotation text where requested.
-                                newGroup.selectAll("g.annotation")
-                                    .each(function(_, i) {
-                                    const color = activeDefs[i]?.textColor;
-                                    if (!color) return;
-                                    d3.select(this)
-                                      .selectAll(".annotation-note-label, .annotation-note-title")
-                                      .style("fill", color);
-                                    });
+                            // Color-map specific annotation text where requested.
+                            newGroup.selectAll("g.annotation")
+                                .each(function(_, i) {
+                                const color = activeDefs[i]?.textColor;
+                                if (!color) return;
+                                d3.select(this)
+                                    .selectAll(".annotation-note-label, .annotation-note-title")
+                                    .style("fill", color);
+                                });
 
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
                             newGroup.transition()
