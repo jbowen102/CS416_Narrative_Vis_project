@@ -177,7 +177,7 @@
                     </button>
 
                     <div class="control-wrap" id="week-slider-wrap">
-                        <!-- <input id="week-slider" type="range" min="27" max="48" value="27"> -->
+                        <!-- <input id="week-slider" type="range" min="27" max="52" value="27"> -->
                         <input id="week-slider" type="range" min="31" max="43" value="31">
                     </div>
                     <span id="week-label">Week 31</span>
@@ -344,14 +344,15 @@
                             {
                                 id: "ex-mississippi-kite",
                                 lat: 12.031, lon: -86.599,
-                                dx: -17, dy: 18,
+                                dx: -17, dy: 15,
                                 title: "",
-                                label: "Mississippi Kite"
+                                label: "Mississippi Kite",
+                                textColor: "#12eb1f"
                             },
                             {
                                 id: "ex-neither",
                                 lat: 9.659, lon: -73.688,
-                                dx: -18, dy: -35,
+                                dx: -15, dy: -35,
                                 title: "",
                                 label: "neither"
                             },
@@ -360,22 +361,24 @@
                                 lat: 6.027, lon: -77.698,
                                 dx: -65, dy: 30 ,
                                 title: "",
-                                label: "Osprey"
+                                label: "Osprey",
+                                textColor: "#926fff"
                             },
-
                             {
                                 id: "ex-both",
                                 lat: 9.261, lon: -84.068,
                                 dx: -40, dy: 20,
                                 title: "",
-                                label: "both"
+                                label: "both",
+                                textColor: "#41e2f5"
                             },
                             {
                                 id: "ex-no-data",
                                 lat: -3.638, lon: -76.122,
                                 dx: -70, dy: 25,
                                 title: "",
-                                label: "[no data]"
+                                label: "[no data]",
+                                textColor: "#999"
                             },
                             {
                                 id: "msk-breeding-ground",
@@ -387,7 +390,7 @@
                             {
                                 id: "msk-overland-migration",
                                 lat: 17.253, lon: -91.001,
-                                dx: 200, dy: -100,
+                                dx: 200, dy: -90,
                                 title: "",
                                 label: "Overland migration begins"
                             },
@@ -1046,6 +1049,16 @@
                                               .attr("class", "annotation-group")
                                               .style("opacity", 0)
                                               .call(makeAnnotations);
+
+                                // Color-map specific annotation text where requested.
+                                newGroup.selectAll("g.annotation")
+                                    .each(function(_, i) {
+                                    const color = activeDefs[i]?.textColor;
+                                    if (!color) return;
+                                    d3.select(this)
+                                      .selectAll(".annotation-note-label, .annotation-note-title")
+                                      .style("fill", color);
+                                    });
 
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
                             newGroup.transition()
