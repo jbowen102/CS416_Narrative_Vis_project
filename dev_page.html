@@ -19,6 +19,7 @@
         }
         #viz-wrapper {
             position: relative;
+            --button-shift-left: 100px;
             max-width: 100%;
             overflow-x: auto;
             overflow-y: visible;
@@ -90,7 +91,7 @@
         .narrative-button-fwd {
             position: absolute;
             top: 0;
-            left: 500px; /* mapWidth, aligns button above the sidebar */
+            left: calc(500px - var(--button-shift-left)); /* mapWidth, with shared left-shift control */
             width: 200px; /* sidebarWidth */
             margin: 0;
             padding: 6px 10px;
@@ -114,7 +115,7 @@
             position: absolute;
             top: 40px;
             width: 80px;
-            left: calc(500px + 200px - 80px); /* mapWidth + sidebarWidth - button width */
+            left: calc(500px + 200px - 80px - var(--button-shift-left)); /* mapWidth + sidebarWidth - button width, with shared shift */
             margin: 0;
             padding: 6px 10px;
             border: 1px solid #999;
@@ -127,6 +128,26 @@
             background: #936fff98;
         }
         .narrative-button-reset.is-disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .narrative-button-free {
+            position: absolute;
+            top: 40px;
+            left: calc(500px - var(--button-shift-left));
+            width: 110px;
+            margin: 0;
+            padding: 6px 10px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            background: #936fffa2;
+            color: white;
+            cursor: pointer;
+        }
+        .narrative-button-free:hover {
+            background: #2c8aff;
+        }
+        .narrative-button-free:disabled {
             background: #666;
             cursor: not-allowed;
         }
@@ -195,6 +216,9 @@
                 <div id="viz-wrapper">
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
                         Start the Tour
+                    </button>
+                    <button id="narr-free" class="narrative-button-free" type="button">
+                        Free Explore
                     </button>
                     <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
                         Reset
@@ -983,6 +1007,20 @@
 
                             d3.select("#narr-reset").on("click", resetVisualization);
 
+                            d3.select("#narr-free").on("click", () => {
+                                    // Skip guided steps and unlock all interactions immediately.
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    setResetButtonLocked(false);
+                                    currentStep = 11;
+
+                                    d3.select("#narr-forward")
+                                        .text("Explore Freely")
+                                        .property("disabled", true)
+                                        .classed("is-explore", true);
+                                    d3.select("#narr-free").property("disabled", true);
+                            });
+
                             // zoom and pan
                             zoomBehavior = d3.zoom()
                                              .filter((event) => {
@@ -1235,6 +1273,7 @@
                                               map: [] });
 
                             d3.select("#narr-forward").text("Start the Tour").property("disabled", false).classed("is-explore", false); // reset button text
+                            d3.select("#narr-free").property("disabled", false);
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
