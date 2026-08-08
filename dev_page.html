@@ -27,6 +27,8 @@
         }
         #map {
             display: block;
+            width: 700px;
+            max-width: none;
             margin-top: 34px;
             width: 770px;
             max-width: none;
@@ -1190,8 +1192,7 @@
                                 });
 
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
-                            newGroup.transition()
-                                    .duration(600)
+                            newGroup.transition().duration(300)
                                     .style("opacity", 1)
                                     .end()
                                     .catch(() => {});
@@ -1200,7 +1201,7 @@
 
                         async function showAnnotationsStaggered(
                             { map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {},
-                            delayMs = 1500
+                            delayMs = 250
                         ) {
                             activeMapAnnotationIds = map;
                             activeSidebarAnnotationIds = sidebar;
@@ -1234,8 +1235,7 @@
                                                       .annotations(annotations);
 
                             sidebarAnnotationLayer.selectAll(".annotation-group")
-                                                  .transition()
-                                                  .duration(300)
+                                                  .transition().duration(300)
                                                   .style("opacity", 0)
                                                   .remove();
 
@@ -1246,8 +1246,7 @@
                                                   .style("opacity", 0)
                                                   .call(makeAnnotations);
 
-                            return newGroup.transition()
-                                           .duration(300)
+                            return newGroup.transition().duration(300)
                                            .style("opacity", 1)
                                            .end()
                                            .catch(() => {});

@@ -25,6 +25,7 @@ get_header(); ?>
                     display: block;
                     width: 700px;
                     max-width: none;
+                    margin-top: 34px;
                 }
                 .map-border {
                     fill: none;
@@ -1128,8 +1129,7 @@ get_header(); ?>
                                 });
 
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
-                            newGroup.transition()
-                                    .duration(600)
+                            newGroup.transition().duration(300)
                                     .style("opacity", 1)
                                     .end()
                                     .catch(() => {});
@@ -1138,7 +1138,7 @@ get_header(); ?>
 
                         async function showAnnotationsStaggered(
                             { map = activeMapAnnotationIds, sidebar = activeSidebarAnnotationIds } = {},
-                            delayMs = 1500
+                            delayMs = 250
                         ) {
                             activeMapAnnotationIds = map;
                             activeSidebarAnnotationIds = sidebar;
@@ -1172,8 +1172,7 @@ get_header(); ?>
                                                       .annotations(annotations);
 
                             sidebarAnnotationLayer.selectAll(".annotation-group")
-                                                  .transition()
-                                                  .duration(300)
+                                                  .transition().duration(300)
                                                   .style("opacity", 0)
                                                   .remove();
 
@@ -1184,8 +1183,7 @@ get_header(); ?>
                                                   .style("opacity", 0)
                                                   .call(makeAnnotations);
 
-                            return newGroup.transition()
-                                           .duration(300)
+                            return newGroup.transition().duration(300)
                                            .style("opacity", 1)
                                            .end()
                                            .catch(() => {});
@@ -1268,7 +1266,6 @@ get_header(); ?>
                             // now include circles that were already there AND in new data (so not exited)
                             const hexMerged = hexEnter.merge(hexSel)
                                                       .attr("fill", d => getHexColor(getHexState(d)))
-                                                      .attr("fill-opacity", 0)
                                                       .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
                                                       .on("pointermove", (event, d) => showTooltip(event, d))
