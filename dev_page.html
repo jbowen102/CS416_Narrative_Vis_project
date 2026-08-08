@@ -140,7 +140,7 @@
             padding: 6px 10px;
             border: 1px solid #999;
             border-radius: 4px;
-            background: #936fffa2;
+            background: #41e3f5b9;
             color: white;
             cursor: pointer;
         }
@@ -679,6 +679,8 @@
                             updateMapAnnotation();
 
                             d3.select("#narr-forward").on("click", async function() {
+                                setFreeButtonLocked(true);
+                                try {
                                 if (currentStep === 0) {
                                     // Optional: prevent double-click during animation
                                     d3.select(this).property("disabled", true);
@@ -1003,22 +1005,35 @@
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
 
+                                } finally {
+                                    // Keep Free Explore inactive during transitions, but re-enable
+                                    // it once the current guided step finishes.
+                                    if (currentStep < 11) {
+                                        setFreeButtonLocked(false);
+                                    }
+                                }
                             });
 
                             d3.select("#narr-reset").on("click", resetVisualization);
 
                             d3.select("#narr-free").on("click", () => {
                                     // Skip guided steps and unlock all interactions immediately.
+                                    activeMapAnnotationIds = [];
+                                    activeSidebarAnnotationIds = [];
+                                    mapAnnotationLayer.selectAll("*").interrupt();
+                                    sidebarAnnotationLayer.selectAll("*").interrupt();
+                                    hideAnnotations();
+
                                     setControlsLocked(false);
                                     setMapInteractionLocked(false);
                                     setResetButtonLocked(false);
                                     currentStep = 11;
 
                                     d3.select("#narr-forward")
-                                        .text("Explore Freely")
-                                        .property("disabled", true)
-                                        .classed("is-explore", true);
-                                    d3.select("#narr-free").property("disabled", true);
+                                      .text("Explore Freely")
+                                      .property("disabled", true)
+                                      .classed("is-explore", true);
+                                    setFreeButtonLocked(true);
                             });
 
                             // zoom and pan
@@ -1112,6 +1127,10 @@
                             d3.select("#narr-reset")
                               .property("disabled", locked)
                               .classed("is-disabled", locked);
+                        }
+
+                        function setFreeButtonLocked(locked) {
+                            d3.select("#narr-free").property("disabled", locked);
                         }
 
                         function sleep(ms) {
@@ -1260,7 +1279,6 @@
 
                             const x = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[0];
                             const y = d => projection([d.cell_ctr_lon, d.cell_ctr_lat])[1];
-                            // TODO make these global
                             updateChart(x, y);
 
                             // Reset zoom/pan to identity.
@@ -1273,7 +1291,7 @@
                                               map: [] });
 
                             d3.select("#narr-forward").text("Start the Tour").property("disabled", false).classed("is-explore", false); // reset button text
-                            d3.select("#narr-free").property("disabled", false);
+                            setFreeButtonLocked(false);
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
