@@ -16,6 +16,15 @@ get_header(); ?>
             <style>
                 #viz-wrapper {
                     position: relative;
+                    max-width: 100%;
+                    overflow-x: auto;
+                    overflow-y: visible;
+                    -webkit-overflow-scrolling: touch;
+                }
+                #map {
+                    display: block;
+                    width: 700px;
+                    max-width: none;
                 }
                 .map-border {
                     fill: none;
