@@ -77,6 +77,11 @@ get_header(); ?>
                     opacity: 0.4;
                     cursor: not-allowed;
                 }
+                #viz-wrapper.controls-locked #week-slider,
+                #viz-wrapper.controls-locked #species-pick input {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
                 .control-wrap {
                     display: inline-block;
                 }
@@ -1049,9 +1054,11 @@ get_header(); ?>
                         function setControlsLocked(locked) {
                             const lockMsg = "Complete narrative steps to unlock this control";
 
-                            d3.select("#week-slider").property("disabled", locked);
-                            d3.select("#chk-msk").property("disabled", locked);
-                            d3.select("#chk-osp").property("disabled", locked);
+                            d3.select("#week-slider").property("disabled", locked).attr("disabled", locked ? "disabled" : null);
+                            d3.select("#chk-msk").property("disabled", locked).attr("disabled", locked ? "disabled" : null);
+                            d3.select("#chk-osp").property("disabled", locked).attr("disabled", locked ? "disabled" : null);
+
+                            wrapper.classed("controls-locked", locked);
 
                             d3.select("#week-slider-wrap").attr("title", locked ? lockMsg : "Select observations for a given week");
                             d3.select("#chk-msk-wrap").attr("title", locked ? lockMsg : "Toggle Mississippi Kite observations on/off");
