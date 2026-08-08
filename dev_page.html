@@ -19,7 +19,7 @@
         }
         #viz-wrapper {
             position: relative;
-            --button-shift-left: 100px;
+            --button-shift-left: 130px;
             max-width: 100%;
             overflow-x: auto;
             overflow-y: visible;
@@ -28,6 +28,8 @@
         #map {
             display: block;
             margin-top: 34px;
+            width: 770px;
+            max-width: none;
         }
         .map-border {
             fill: none;
@@ -225,10 +227,10 @@
                     </button>
 
                     <div class="control-wrap" id="week-slider-wrap">
-                        <!-- <input id="week-slider" type="range" min="27" max="52" value="27"> -->
-                        <input id="week-slider" type="range" min="31" max="43" value="31">
+                        <!-- <input id="week-slider" type="range" min="31" max="43" value="31"> -->
+                        <input id="week-slider" type="range" min="27" max="52" value="27">
                     </div>
-                    <span id="week-label">Week 31</span>
+                    <span id="week-label">Week 27</span>
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
@@ -249,16 +251,16 @@
 
                         const svg = d3.select("#map");
                         const sidebarWidth = 200;
-                        const mapWidth = 500;
-                        const svgWidth = mapWidth + sidebarWidth;
-                        const svgHeight = 550;
+                        const mapWidth = 570;
+                        const svgWidth = mapWidth + sidebarWidth;   // update #map 'width' CSS value above to match if this changed
+                        const svgHeight = 570;
                         const mapHeight = svgHeight;
                         svg.attr("width", svgWidth)
                            .attr("height", svgHeight);
 
-                        const map_scale = 530;
-                        const latMapOffset = 26;  // shift map leftward in SVG window
-                        const vertMapOffset = 5;  // shift map downward in SVG window
+                        const map_scale = 400;
+                        const latMapOffset = 31.5;  // shift map leftward in SVG window
+                        const vertMapOffset = 3;  // shift map downward in SVG window
                         const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
                         const hexRadiusKm = hexSpacingKm / 2;
 
@@ -618,10 +620,12 @@
                         }
 
                         async function init() {
-                            data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
-                            data_osp = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
+                            // data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
+                            // data_osp = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_osp = await d3.csv(`${dataDir}/osprey_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
 
-                            firstWeek = d3.min(data_msk, d => d.week + 1);
+                            firstWeek = 27;
                             selectedWeek = firstWeek;
                             d3.select("#week-slider").property("value", selectedWeek);
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
