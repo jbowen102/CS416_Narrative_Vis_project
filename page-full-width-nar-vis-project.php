@@ -466,7 +466,7 @@ get_header(); ?>
                                 id: "guided-int-note",
                                 x: 20,
                                 y: 145,
-                                label: "Map and data controls will be unlocked after guided portion.",
+                                label: "Data controls will be unlocked after guided portion.",
                                 wrap: 160
                             },
                             {
@@ -496,14 +496,14 @@ get_header(); ?>
                             {
                                 id: "agg-info-note",
                                 x: 20,
-                                y: 260,
-                                label: "Data aggregated by week, across years from early 2000s to Mar 2026.",
+                                y: 280,
+                                label: "Observation data are aggregated by week, across years from early 2000s to Mar 2026.",
                                 wrap: 160
                             },
                             {
                                 id: "hover-note",
                                 x: 20,
-                                y: 350,
+                                y: 370,
                                 title: "",
                                 label: "Hover over each cell to see more details.",
                                 wrap: 160
@@ -567,7 +567,7 @@ get_header(); ?>
                             {
                                 id: "osp-powered-flight-note",
                                 x: 20,
-                                y: svgHeight / 8 + 170,
+                                y: svgHeight / 8 + 80,
                                 title: "",
                                 label: "The Osprey's powerful wings allow it to cross the Gulf and Caribbean with ease, flying sometimes as long as 24-48 hrs at a time, and it has no trouble catching a fishy meal along the way.",
                                 wrap: 160
@@ -577,7 +577,7 @@ get_header(); ?>
                                 x: 20,
                                 y: svgHeight / 8,
                                 title: "",
-                                label: "Now use the week slider and species toggles to explore observation distributions throughout the Fall migration!",
+                                label: "Now use the week slider and species toggles to explore observation distributions throughout the Fall migration! Zoom in to explore areas in more detail.",
                                 wrap: 160
                             }
                         ];
@@ -662,13 +662,13 @@ get_header(); ?>
                                     // Clear intro annotations first (optional, but cleaner)
                                     await showAnnotations({ sidebar: [], map: [] });
 
-                                    // 1) week slider
+                                    // week slider
                                     await animateWeekSlider(42, 1500);
 
-                                    // 2) zoom
+                                    // zoom
                                     await zoomToLonLat(-85, 5.7, 1.9, 2500);
 
-                                    // 3) annotations
+                                    // annotations
                                     await showAnnotationsStaggered({
                                         sidebar: ["color-scale-note", "hex-presence-note", "hover-note", "agg-info-note"],
                                         map: ["ex-mississippi-kite", "ex-neither", "ex-osprey", "ex-both", "ex-no-data"]
@@ -688,27 +688,27 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Clear scene 2 annotations.
+                                    // Clear scene 2 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 2) Zoom all the way back out.
+                                    // Zoom all the way back out.
                                     await svg.transition()
                                              .duration(1000)
                                              .call(zoomBehavior.transform, d3.zoomIdentity)
                                              .end()
                                              .catch(() => {});
 
-                                    // 3) Move week slider back to week 31.
+                                    // Move week slider back to week 31.
                                     await animateWeekSlider(31);
                                     await sleep(700);
 
-                                    // 4) Show only Mississippi kite data.
+                                    // Show only Mississippi kite data.
                                     setSpeciesSelection(true, false);
                                     updateChart(x, y);
 
                                     await sleep(300);
-                                    // 5) Add final scene annotations.
+                                    // Add final scene annotations.
                                     await showAnnotations({
                                         sidebar: ["msk-breeding-note"],
                                         map: ["msk-breeding-ground"]
@@ -729,14 +729,14 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Clear scene 3 annotations.
+                                    // Clear scene 3 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 2) Move week slider slowly to week 34.
+                                    // Move week slider slowly to week 34.
                                     await animateWeekSlider(34, 2600);
 
-                                    // 3) Add scene 4 annotations.
+                                    // Add scene 4 annotations.
                                     await showAnnotations({
                                         sidebar: ["msk-overland-note"],
                                         map: ["msk-overland-migration"]
@@ -757,11 +757,11 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Transition out scene 4 annotations.
+                                    // Transition out scene 4 annotations.
                                     await showAnnotations({ sidebar: ["msk-overland-note"], map: [] });
                                     await sleep(250);
 
-                                    // 2) Add new Mississippi Kite scene annotation.
+                                    // Add new Mississippi Kite scene annotation.
                                     await showAnnotations({
                                         sidebar: ["msk-overland-note"],
                                         map: ["msk-no-staging-florida"]
@@ -782,14 +782,14 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Clear scene 4 annotations.
+                                    // Clear scene 4 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 2) Move week slider slowly to week 40.
+                                    // Move week slider slowly to week 40.
                                     await animateWeekSlider(40, 2600);
 
-                                    // 3) Add scene 5 annotations.
+                                    // Add scene 5 annotations.
                                     await showAnnotations({
                                         sidebar: ["msk-no-detections-note", "msk-explanation-note"],
                                         map: ["msk-no-detections"]
@@ -810,15 +810,15 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Clear scene 5 annotations.
+                                    // Clear scene 5 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 1.5) Toggle off all species as a reset
+                                    // Toggle off all species as a reset
                                     setSpeciesSelection(false, false);
                                     updateChart(x, y);
 
-                                    // 2) Zoom all the way out and move slider to week 30.
+                                    // Zoom all the way out and move slider to week 30.
                                     await Promise.all([
                                         svg.transition()
                                            .duration(1000)
@@ -828,11 +828,11 @@ get_header(); ?>
                                         animateWeekSlider(31)
                                     ]);
 
-                                    // 3) Switch to Osprey-only.
+                                    // Switch to Osprey-only.
                                     setSpeciesSelection(false, true);
                                     updateChart(x, y);
 
-                                    // 4) Add scene 6 annotations.
+                                    // Add scene 6 annotations.
                                     await showAnnotations({
                                         sidebar: ["osp-breeding-note", "osp-intro-note"],
                                         map: ["osp-breeding-ground"]
@@ -853,14 +853,14 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Clear scene 6 annotations.
+                                    // Clear scene 6 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 2) Slowly move week slider to week 37.
+                                    // Slowly move week slider to week 37.
                                     await animateWeekSlider(37, 2600);
 
-                                    // 3) Add scene 7 map annotation.
+                                    // Add scene 7 map annotation.
                                     await showAnnotations({
                                         sidebar: [],
                                         map: ["osp-funnel-texas"]
@@ -881,11 +881,11 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Transition out scene 7 annotations.
+                                    // Transition out scene 7 annotations.
                                     await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 2) Keep week slider where it is; add scene 8 annotations.
+                                    // Keep week slider where it is; add scene 8 annotations.
                                     await showAnnotations({
                                         sidebar: ["osp-caribbean-note"],
                                         map: ["osp-increased-detections-dr"]
@@ -908,9 +908,7 @@ get_header(); ?>
 
                                     // Keep current annotations and animate a tighter Caribbean zoom.
                                     await zoomToLonLat(-71.246, 19.352, 2, 1800);
-                                    await showAnnotations({
-                                        sidebar: ["osp-caribbean-note"]
-                                    });
+                                    // Don't re-render annotations here - causes blink
 
                                     // Keep data controls locked for the next guided scene.
                                     setControlsLocked(true);
@@ -927,14 +925,14 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Remove the current map and sidebar annotations.
-                                    await showAnnotations({ sidebar: ["osp-caribbean-note"], map: [] });
+                                    // Remove the current map and sidebar annotations.
+                                    await showAnnotations({ sidebar: [], map: [] });
                                     await sleep(250);
 
-                                    // 2) Slowly move to late fall.
+                                    // Slowly move to late fall.
                                     await animateWeekSlider(43, 3000);
 
-                                    // 3) Add sidebar-only explanatory note.
+                                    // Add sidebar-only explanatory note.
                                     await showAnnotations({
                                         sidebar: ["osp-powered-flight-note"],
                                         map: []
@@ -955,18 +953,18 @@ get_header(); ?>
                                     setControlsLocked(true);
                                     setMapInteractionLocked(true);
 
-                                    // 1) Zoom back out.
+                                    // Zoom back out.
                                     await svg.transition()
                                              .duration(1200)
                                              .call(zoomBehavior.transform, d3.zoomIdentity)
                                              .end()
                                              .catch(() => {});
 
-                                    // 2) Switch on both species.
+                                    // Switch on both species.
                                     setSpeciesSelection(true, true);
                                     updateChart(x, y);
 
-                                    // 3) Add final sidebar guidance note in addition to existing scene content.
+                                    // Add final sidebar guidance note in addition to existing scene content.
                                     await showAnnotations({
                                         sidebar: ["final-explore-note"],
                                         map: []
