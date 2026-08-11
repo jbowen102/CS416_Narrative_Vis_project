@@ -16,6 +16,7 @@ get_header(); ?>
             <style>
                 #viz-wrapper {
                     position: relative;
+                    --button-shift-left: 130px;
                     max-width: 100%;
                     overflow-x: auto;
                     overflow-y: visible;
@@ -26,6 +27,8 @@ get_header(); ?>
                     width: 700px;
                     max-width: none;
                     margin-top: 34px;
+                    width: 770px;
+                    max-width: none;
                 }
                 .map-border {
                     fill: none;
@@ -89,7 +92,7 @@ get_header(); ?>
                 .narrative-button-fwd {
                     position: absolute;
                     top: 0;
-                    left: 500px; /* mapWidth, aligns button above the sidebar */
+                    left: calc(500px - var(--button-shift-left)); /* mapWidth, with shared left-shift control */
                     width: 200px; /* sidebarWidth */
                     margin: 0;
                     padding: 6px 10px;
@@ -113,7 +116,7 @@ get_header(); ?>
                     position: absolute;
                     top: 40px;
                     width: 80px;
-                    left: calc(500px + 200px - 80px); /* mapWidth + sidebarWidth - button width */
+                    left: calc(500px + 200px - 80px - var(--button-shift-left)); /* mapWidth + sidebarWidth - button width, with shared shift */
                     margin: 0;
                     padding: 6px 10px;
                     border: 1px solid #999;
@@ -126,6 +129,26 @@ get_header(); ?>
                     background: #936fff98;
                 }
                 .narrative-button-reset.is-disabled {
+                    background: #666;
+                    cursor: not-allowed;
+                }
+                .narrative-button-free {
+                    position: absolute;
+                    top: 40px;
+                    left: calc(500px - var(--button-shift-left));
+                    width: 110px;
+                    margin: 0;
+                    padding: 6px 10px;
+                    border: 1px solid #999;
+                    border-radius: 4px;
+                    background: #41e3f5b9;
+                    color: white;
+                    cursor: pointer;
+                }
+                .narrative-button-free:hover {
+                    background: #2c8aff;
+                }
+                .narrative-button-free:disabled {
                     background: #666;
                     cursor: not-allowed;
                 }
@@ -195,16 +218,18 @@ get_header(); ?>
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
                         Start The Tour
                     </button>
+                    <button id="narr-free" class="narrative-button-free" type="button">
+                        Free Explore
+                    </button>
                     <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
                         Reset
                     </button>
 
                     <div class="control-wrap" id="week-slider-wrap">
-
-                        <input id="week-slider" type="range" min="31" max="43" value="31">
-
+                        <!-- <input id="week-slider" type="range" min="31" max="43" value="31"> -->
+                        <input id="week-slider" type="range" min="27" max="52" value="27">
                     </div>
-                    <span id="week-label">Week 31</span>
+                    <span id="week-label">Week 27</span>
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
@@ -225,16 +250,16 @@ get_header(); ?>
 
                         const svg = d3.select("#map");
                         const sidebarWidth = 200;
-                        const mapWidth = 500;
-                        const svgWidth = mapWidth + sidebarWidth;
-                        const svgHeight = 550;
+                        const mapWidth = 570;
+                        const svgWidth = mapWidth + sidebarWidth;   // update #map 'width' CSS value above to match if this changed
+                        const svgHeight = 570;
                         const mapHeight = svgHeight;
                         svg.attr("width", svgWidth)
                            .attr("height", svgHeight);
 
-                        const map_scale = 530;
-                        const latMapOffset = 26;  // shift map leftward in SVG window
-                        const vertMapOffset = 5;  // shift map downward in SVG window
+                        const map_scale = 400;
+                        const latMapOffset = 31.5;  // shift map leftward in SVG window
+                        const vertMapOffset = 3;  // shift map downward in SVG window
                         const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
                         const hexRadiusKm = hexSpacingKm / 2;
 
@@ -594,10 +619,12 @@ get_header(); ?>
                         }
 
                         async function init() {
-                            data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
-                            data_osp = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
+                            // data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
+                            // data_osp = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
+                            data_osp = await d3.csv(`${dataDir}/osprey_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
 
-                            firstWeek = d3.min(data_msk, d => d.week + 1);
+                            firstWeek = 27;
                             selectedWeek = firstWeek;
                             d3.select("#week-slider").property("value", selectedWeek);
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
@@ -655,6 +682,8 @@ get_header(); ?>
                             updateMapAnnotation();
 
                             d3.select("#narr-forward").on("click", async function() {
+                                setFreeButtonLocked(true);
+                                try {
                                 if (currentStep === 0) {
                                     // Optional: prevent double-click during animation
                                     d3.select(this).property("disabled", true);
@@ -979,9 +1008,36 @@ get_header(); ?>
                                     d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
                                 }
 
+                                } finally {
+                                    // Keep Free Explore inactive during transitions, but re-enable
+                                    // it once the current guided step finishes.
+                                    if (currentStep < 11) {
+                                        setFreeButtonLocked(false);
+                                    }
+                                }
                             });
 
                             d3.select("#narr-reset").on("click", resetVisualization);
+
+                            d3.select("#narr-free").on("click", () => {
+                                    // Skip guided steps and unlock all interactions immediately.
+                                    activeMapAnnotationIds = [];
+                                    activeSidebarAnnotationIds = [];
+                                    mapAnnotationLayer.selectAll("*").interrupt();
+                                    sidebarAnnotationLayer.selectAll("*").interrupt();
+                                    hideAnnotations();
+
+                                    setControlsLocked(false);
+                                    setMapInteractionLocked(false);
+                                    setResetButtonLocked(false);
+                                    currentStep = 11;
+
+                                    d3.select("#narr-forward")
+                                      .text("Explore Freely")
+                                      .property("disabled", true)
+                                      .classed("is-explore", true);
+                                    setFreeButtonLocked(true);
+                            });
 
                             // zoom and pan
                             zoomBehavior = d3.zoom()
@@ -1074,6 +1130,10 @@ get_header(); ?>
                             d3.select("#narr-reset")
                               .property("disabled", locked)
                               .classed("is-disabled", locked);
+                        }
+
+                        function setFreeButtonLocked(locked) {
+                            d3.select("#narr-free").property("disabled", locked);
                         }
 
                         function sleep(ms) {
@@ -1231,6 +1291,7 @@ get_header(); ?>
                                               map: [] });
 
                             d3.select("#narr-forward").text("Start the Tour").property("disabled", false).classed("is-explore", false); // reset button text
+                            setFreeButtonLocked(false);
                             currentStep = 0;
 
                             setControlsLocked(true); // lock out free exploration again
