@@ -178,6 +178,9 @@
         #map-interaction-blocker {
             cursor: not-allowed;
         }
+        .commentary-section {
+            font-family: sans-serif;
+        }
     </style>
     <!--  -->
     <!--  -->
@@ -1407,6 +1410,35 @@
 
 
                 </div> <!-- viz-wrapper -->
+                <div id="commentary" class="commentary-section">
+                    </br>
+                    </br>
+                    <hr style="border: 1px solid #cccccc96; margin: 20px 0;">
+                    <p>
+                    I built the above narrative visualization as part of the CS 416
+                    Data Visualization course at The University of Illinois at
+                    Urbana-Champaign during my Master of Computer Science in
+                    Data Science studies.
+                    It uses the <a href="https://idl.uw.edu/papers/d3">D3.js library</a>,
+                    a commonly-used tool for creating interactive data visualizations
+                    on the web. A few examples from the New York Times:
+                    <ul>
+                        <li><a href="https://archive.nytimes.com/www.nytimes.com/interactive/2010/02/02/us/politics/20100201-budget-porcupine-graphic.html">Budget Forecasts, Compared With Reality (Porcupine Graphic)</a></li>
+                        <li><a href="https://www.nytimes.com/interactive/2026/07/01/us/america-identity-ancestry-census.html">How a Nation of Immigrants Traces its Roots</a></li>
+                    </ul>
+                    <br>
+                    My visualization uses eBird data (<a href="https://science.ebird.org/en/use-ebird-data/download-ebird-data-products">eBird Basic Dataset</a>) to illustrate
+                    the different migration paths that Mississippi Kites and Ospreys use
+                    and allows the users to freely explore once the guided tour is complete.
+                    I extracted, preprocessed, and aggregated the data using R
+                    (<a href="https://cornelllabofornithology.github.io/auk/">auk library</a>),
+                    similarly to how I did it for my
+                    <a href="https://infiniteiteration.com/woodpecker-population-modeling/">STAT 420 Statistical Modeling final project</a>
+                    last Fall that analyzed Pileated Woodpecker observations and habitat covariates.
+                    <br>
+                    <br>
+                    </p>
+                </div>
 
                 <!-- custom HTML ends here -->
 
