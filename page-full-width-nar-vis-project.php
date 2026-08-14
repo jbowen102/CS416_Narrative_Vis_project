@@ -1431,6 +1431,14 @@ get_header(); ?>
                     last Fall that analyzed Pileated Woodpecker observations and habitat covariates.
                     <br>
                     <br>
+                    Visit the <a href="https://github.com/jbowen102/CS416_Narrative_Vis_project">GitHub repository</a>
+                    to view this project's source code.
+                    <br>
+                    <br>
+                    See the improved, generalized version I developed after the course ended [still under construction]:
+                    <a href="https://infiniteiteration.com/ebird-raptor-migration-vis/">eBird Raptor Migration Visualizer</a>.
+                    <br>
+                    <br>
                     </p>
                 </div>
 
