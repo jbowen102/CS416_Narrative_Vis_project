@@ -657,6 +657,14 @@ get_header(); ?>
                             updateMapAnnotation();
 
                             d3.select("#narr-forward").on("click", async function() {
+                                if (currentStep > 0 && currentStep < 11) {
+                                    // Return to the expected guided view before advancing scenes.
+                                    d3.select(this).property("disabled", true);
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+                                    await restoreGuidedViewForStep(currentStep, 700);
+                                }
+
                                 if (currentStep === 0) {
                                     // Optional: prevent double-click during animation
                                     d3.select(this).property("disabled", true);
@@ -1050,6 +1058,24 @@ get_header(); ?>
                                       .call(zoomBehavior.transform, targetTransform)
                                       .end()
                                       .catch(() => {});
+                        }
+
+                        async function restoreGuidedViewForStep(step, duration = 700) {
+                            if (step === 1) {
+                                await zoomToLonLat(-85, 5.7, 1.9, duration);
+                                return;
+                            }
+
+                            if (step === 9 || step === 10) {
+                                await zoomToLonLat(-71.246, 19.352, 2, duration);
+                                return;
+                            }
+
+                            await svg.transition()
+                                     .duration(duration)
+                                     .call(zoomBehavior.transform, d3.zoomIdentity)
+                                     .end()
+                                     .catch(() => {});
                         }
 
                         function setControlsLocked(locked) {
