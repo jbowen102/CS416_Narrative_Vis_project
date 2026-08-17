@@ -196,25 +196,24 @@ get_header(); ?>
 
                 <div id="viz-wrapper">
                     <button id="narr-forward" class="narrative-button-fwd" type="button">
-                        Start The Tour
+                        Start the Tour
                     </button>
                     <button id="narr-reset" class="narrative-button-reset is-disabled" type="button" disabled>
                         Reset
                     </button>
 
                     <div class="control-wrap" id="week-slider-wrap">
-
+                        <!-- <input id="week-slider" type="range" min="27" max="52" value="27"> -->
                         <input id="week-slider" type="range" min="31" max="43" value="31">
-
                     </div>
                     <span id="week-label">Week 31</span>
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
-                            <label style="margin-right:12px;"><input type="checkbox" id="chk-msk" checked> Mississippi Kite</label>
+                                                <label style="margin-right:12px; color:#12eb1f;"><input type="checkbox" id="chk-msk" checked> Mississippi Kite</label>
                         </span>
                         <span class="control-wrap" id="chk-osp-wrap" style="display: inline-block;">
-                            <label><input type="checkbox" id="chk-osp" checked> Osprey</label>
+                                                <label style="color:#926fff;"><input type="checkbox" id="chk-osp" checked> Osprey</label>
                         </span>
                     </div>
                     </br>
