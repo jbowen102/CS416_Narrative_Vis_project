@@ -1275,8 +1275,8 @@
                             const mskChecked = wrapper.select("#chk-msk").property("checked");
                             const ospChecked = wrapper.select("#chk-osp").property("checked");
 
-                            const mskWeek = (mskChecked && data_msk) ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
-                            const ospWeek = (ospChecked && data_osp) ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
+                            const mskWeek = data_msk ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
+                            const ospWeek = data_osp ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
 
                             const mergedWeek = buildMergedWeekData(mskWeek, ospWeek, mskChecked, ospChecked);
                             const hexSel = dataLayer.selectAll(".data-hex")
@@ -1298,14 +1298,14 @@
                             // now include circles that were already there AND in new data (so not exited)
                             const hexMerged = hexEnter.merge(hexSel)
                                                       .attr("fill", d => getHexColor(getHexState(d)))
-                                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
+                                                      .attr("stroke-opacity", d => d.n_checklists > 0 ? 0.3 : 0)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
                                                       .on("pointermove", (event, d) => showTooltip(event, d))
                                                       .on("pointerleave", hideTooltip);
                             hexMerged.transition()
                                      .ease(d3.easeCubicOut).duration(150)
                                      .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 1)
-                                     .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
+                                     .attr("stroke-opacity", d => d.n_checklists > 0 ? 0.3 : 0);
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
 
                         }
@@ -1350,21 +1350,21 @@
                                 }
                                 const row = byCell.get(d.cell);
                                 if (species === "msk") {
-                                    row.det_freq_msk = d.det_freq;
-                                    row.n_checklists = d.n_checklists;
+                                    row.det_freq_msk = mskChecked ? d.det_freq : 0;
+                                    row.n_checklists = Math.max(row.n_checklists, d.n_checklists || 0);
                                     row.n_detected = d.n_detected;
                                     row.tot_observed = d.tot_observed;
                                 } else {
-                                    row.det_freq_osp = d.det_freq;
-                                    row.n_checklists = d.n_checklists;
+                                    row.det_freq_osp = ospChecked ? d.det_freq : 0;
+                                    row.n_checklists = Math.max(row.n_checklists, d.n_checklists || 0);
                                     row.n_detected = d.n_detected;
                                     row.tot_observed = d.tot_observed;
                                 }
                                 }
                             }
 
-                            if (mskChecked) addRows(mskWeek, "msk");
-                            if (ospChecked) addRows(ospWeek, "osp");
+                            addRows(mskWeek, "msk");
+                            addRows(ospWeek, "osp");
 
                             return Array.from(byCell.values());
                         }
