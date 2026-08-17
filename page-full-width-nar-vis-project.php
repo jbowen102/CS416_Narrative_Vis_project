@@ -684,6 +684,11 @@ get_header(); ?>
                             d3.select("#narr-forward").on("click", async function() {
                                 setFreeButtonLocked(true);
                                 try {
+                                if (currentStep === 11) {
+                                    // From Free Explore, restore baseline state before replaying step 1.
+                                    await resetVisualization({ keepResetUnlocked: true });
+                                }
+
                                 if (currentStep === 0) {
                                     // Optional: prevent double-click during animation
                                     d3.select(this).property("disabled", true);
@@ -1005,7 +1010,7 @@ get_header(); ?>
                                     setMapInteractionLocked(false);
                                     currentStep = 11;
 
-                                    d3.select(this).text("Explore Freely").property("disabled", true).classed("is-explore", true);
+                                    d3.select(this).text("Start the Tour").property("disabled", false).classed("is-explore", false);
                                 }
 
                                 } finally {
@@ -1033,9 +1038,9 @@ get_header(); ?>
                                     currentStep = 11;
 
                                     d3.select("#narr-forward")
-                                      .text("Explore Freely")
-                                      .property("disabled", true)
-                                      .classed("is-explore", true);
+                                      .text("Start the Tour")
+                                      .property("disabled", false)
+                                      .classed("is-explore", false);
                                     setFreeButtonLocked(true);
                             });
 
@@ -1270,7 +1275,7 @@ get_header(); ?>
                             }, 2000);
                         }
 
-                        function resetVisualization() {
+                        function resetVisualization({ keepResetUnlocked = false } = {}) {
                             // Reset controls to their initial values.
                             selectedWeek = firstWeek;
                             d3.select("#week-slider").property("value", selectedWeek);
@@ -1296,7 +1301,7 @@ get_header(); ?>
 
                             setControlsLocked(true); // lock out free exploration again
                             setMapInteractionLocked(true);
-                            setResetButtonLocked(true);
+                            setResetButtonLocked(!keepResetUnlocked);
                         }
 
                         // Render each species in its own layer so both are visible
