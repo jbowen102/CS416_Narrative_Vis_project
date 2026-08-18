@@ -516,15 +516,7 @@
                                 id: "guided-int-note",
                                 x: 20,
                                 y: 145,
-                                label: "Data controls will be unlocked after guided portion.",
-                                wrap: 160
-                            },
-                            {
-                                id: "zoom-pan-note",
-                                x: 20,
-                                y: 220,
-                                title: "",
-                                label: "Zoom and pan are enabled, but data controls are locked until guided portion is complete.",
+                                label: "Click 'Free Explore' to explore the data on your own.",
                                 wrap: 160
                             },
                             {
@@ -632,7 +624,7 @@
                             }
                         ];
 
-                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-and-pan-note"];
+                        let activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
 
                         function translation_str(x, y) { return "translate(" + x + "," + y + ")"; }
 
@@ -703,7 +695,7 @@
                             setResetButtonLocked(true);
 
                             // Show intro note immediately; map annotation stays hidden until button click.
-                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note", "zoom-pan-note"];
+                            activeSidebarAnnotationIds = ["intro-note", "guided-int-note"];
                             activeMapAnnotationIds = [];
                             updateSidebarAnnotation();
                             updateMapAnnotation();
