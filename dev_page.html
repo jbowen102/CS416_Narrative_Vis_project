@@ -207,6 +207,9 @@
         #map-interaction-blocker {
             cursor: not-allowed;
         }
+        .commentary-section {
+            font-family: sans-serif;
+        }
     </style>
     <!--  -->
     <!--  -->
@@ -243,10 +246,10 @@
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
-                            <label style="margin-right:12px;"><input type="checkbox" id="chk-msk" checked> Mississippi Kite</label>
+                            <label style="margin-right:12px; color:#12eb1f;"><input type="checkbox" id="chk-msk" checked> Mississippi Kite</label>
                         </span>
                         <span class="control-wrap" id="chk-osp-wrap" style="display: inline-block;">
-                            <label><input type="checkbox" id="chk-osp" checked> Osprey</label>
+                            <label style="color:#926fff;"><input type="checkbox" id="chk-osp" checked> Osprey</label>
                         </span>
                     </div>
                     </br>
@@ -713,6 +716,14 @@
                                     await resetVisualization({ keepResetUnlocked: true });
                                 }
 
+                                if (currentStep > 0 && currentStep < 11) {
+                                    // Return to the expected guided view before advancing scenes.
+                                    d3.select(this).property("disabled", true);
+                                    setControlsLocked(true);
+                                    setMapInteractionLocked(true);
+                                    await restoreGuidedViewForStep(currentStep, 700);
+                                }
+
                                 if (currentStep === 0) {
                                     // Optional: prevent double-click during animation
                                     d3.select(this).property("disabled", true);
@@ -1135,6 +1146,24 @@
                                       .catch(() => {});
                         }
 
+                        async function restoreGuidedViewForStep(step, duration = 700) {
+                            if (step === 1) {
+                                await zoomToLonLat(-85, 5.7, 1.9, duration);
+                                return;
+                            }
+
+                            if (step === 9 || step === 10) {
+                                await zoomToLonLat(-71.246, 19.352, 2, duration);
+                                return;
+                            }
+
+                            await svg.transition()
+                                     .duration(duration)
+                                     .call(zoomBehavior.transform, d3.zoomIdentity)
+                                     .end()
+                                     .catch(() => {});
+                        }
+
                         function setControlsLocked(locked) {
                             const lockMsg = "Complete narrative steps to unlock this control";
 
@@ -1333,8 +1362,8 @@
                             const mskChecked = wrapper.select("#chk-msk").property("checked");
                             const ospChecked = wrapper.select("#chk-osp").property("checked");
 
-                            const mskWeek = (mskChecked && data_msk) ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
-                            const ospWeek = (ospChecked && data_osp) ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
+                            const mskWeek = data_msk ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
+                            const ospWeek = data_osp ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
 
                             const mergedWeek = buildMergedWeekData(mskWeek, ospWeek, mskChecked, ospChecked);
                             const hexSel = dataLayer.selectAll(".data-hex")
@@ -1356,14 +1385,14 @@
                             // now include circles that were already there AND in new data (so not exited)
                             const hexMerged = hexEnter.merge(hexSel)
                                                       .attr("fill", d => getHexColor(getHexState(d)))
-                                                      .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3)
+                                                      .attr("stroke-opacity", d => d.n_checklists > 0 ? 0.3 : 0)
                                                       .on("pointerenter", (event, d) => showTooltip(event, d))
                                                       .on("pointermove", (event, d) => showTooltip(event, d))
                                                       .on("pointerleave", hideTooltip);
                             hexMerged.transition()
                                      .ease(d3.easeCubicOut).duration(150)
                                      .attr("fill-opacity", d => getHexState(d) === "none" ? 0 : 1)
-                                     .attr("stroke-opacity", d => getHexState(d) === "none" ? 0 : 0.3);
+                                     .attr("stroke-opacity", d => d.n_checklists > 0 ? 0.3 : 0);
                             mapAnnotationLayer.raise(); // keep annotations above hex grid
 
                         }
@@ -1407,21 +1436,21 @@
                                 }
                                 const row = byCell.get(d.cell);
                                 if (species === "msk") {
-                                    row.det_freq_msk = d.det_freq;
-                                    row.n_checklists = d.n_checklists;
+                                    row.det_freq_msk = mskChecked ? d.det_freq : 0;
+                                    row.n_checklists = Math.max(row.n_checklists, d.n_checklists || 0);
                                     row.n_detected = d.n_detected;
                                     row.tot_observed = d.tot_observed;
                                 } else {
-                                    row.det_freq_osp = d.det_freq;
-                                    row.n_checklists = d.n_checklists;
+                                    row.det_freq_osp = ospChecked ? d.det_freq : 0;
+                                    row.n_checklists = Math.max(row.n_checklists, d.n_checklists || 0);
                                     row.n_detected = d.n_detected;
                                     row.tot_observed = d.tot_observed;
                                 }
                                 }
                             }
 
-                            if (mskChecked) addRows(mskWeek, "msk");
-                            if (ospChecked) addRows(ospWeek, "osp");
+                            addRows(mskWeek, "msk");
+                            addRows(ospWeek, "osp");
 
                             return Array.from(byCell.values());
                         }
@@ -1493,6 +1522,43 @@
 
 
                 </div> <!-- viz-wrapper -->
+                <div id="commentary" class="commentary-section">
+                    </br>
+                    </br>
+                    <hr style="border: 1px solid #cccccc96; margin: 20px 0;">
+                    <p>
+                    I built the above narrative visualization as part of the CS 416
+                    Data Visualization course at The University of Illinois at
+                    Urbana-Champaign during my Master of Computer Science in
+                    Data Science studies.
+                    It uses the <a href="https://idl.uw.edu/papers/d3">D3.js library</a>,
+                    a commonly-used tool for creating interactive data visualizations
+                    on the web. A few examples from the New York Times:
+                    <ul>
+                        <li><a href="https://archive.nytimes.com/www.nytimes.com/interactive/2010/02/02/us/politics/20100201-budget-porcupine-graphic.html">Budget Forecasts, Compared With Reality (Porcupine Graphic)</a></li>
+                        <li><a href="https://www.nytimes.com/interactive/2026/07/01/us/america-identity-ancestry-census.html">How a Nation of Immigrants Traces its Roots</a></li>
+                    </ul>
+                    <br>
+                    My visualization uses eBird data (<a href="https://science.ebird.org/en/use-ebird-data/download-ebird-data-products">eBird Basic Dataset</a>) to illustrate
+                    the different migration paths that Mississippi Kites and Ospreys use
+                    and allows the users to freely explore once the guided tour is complete.
+                    I extracted, preprocessed, and aggregated the data using R
+                    (<a href="https://cornelllabofornithology.github.io/auk/">auk library</a>),
+                    similarly to how I did it for my
+                    <a href="https://infiniteiteration.com/woodpecker-population-modeling/">STAT 420 Statistical Modeling final project</a>
+                    last Fall that analyzed Pileated Woodpecker observations and habitat covariates.
+                    <br>
+                    <br>
+                    Visit the <a href="https://github.com/jbowen102/CS416_Narrative_Vis_project">GitHub repository</a>
+                    to view this project's source code.
+                    <br>
+                    <br>
+                    See the improved, generalized version I developed after the course ended [still under construction]:
+                    <a href="https://infiniteiteration.com/ebird-raptor-migration-vis/">eBird Raptor Migration Visualizer</a>.
+                    <br>
+                    <br>
+                    </p>
+                </div>
 
                 <!-- custom HTML ends here -->
 
