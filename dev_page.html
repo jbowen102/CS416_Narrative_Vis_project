@@ -16,7 +16,7 @@
         }
         #viz-wrapper {
             position: relative;
-            --button-shift-left: 130px;
+            --button-shift-left: 40px;
             max-width: 100%;
             overflow-x: auto;
             overflow-y: visible;
@@ -88,11 +88,21 @@
         .control-wrap {
             display: inline-block;
         }
+        .narrative-button-fwd,
+        .narrative-button-reset,
+        .narrative-button-free {
+            box-sizing: border-box;
+            font-size: 14px;
+            line-height: 1.2;
+            letter-spacing: normal;
+            text-transform: none;
+            white-space: nowrap;
+        }
         .narrative-button-fwd {
             position: absolute;
             top: 0;
             left: calc(500px - var(--button-shift-left)); /* mapWidth, with shared left-shift control */
-            width: 200px; /* sidebarWidth */
+            width: 220px; /* sidebarWidth */
             margin: 0;
             padding: 6px 10px;
             border: 1px solid #999;
@@ -115,7 +125,7 @@
             position: absolute;
             top: 40px;
             width: 80px;
-            left: calc(500px + 200px - 80px - var(--button-shift-left)); /* mapWidth + sidebarWidth - button width, with shared shift */
+            left: calc(500px + 220px - 80px - var(--button-shift-left)); /* mapWidth + sidebarWidth - button width, with shared shift */
             margin: 0;
             padding: 6px 10px;
             border: 1px solid #999;
@@ -135,7 +145,7 @@
             position: absolute;
             top: 40px;
             left: calc(500px - var(--button-shift-left));
-            width: 110px;
+            width: 130px;
             margin: 0;
             padding: 6px 10px;
             border: 1px solid #999;
