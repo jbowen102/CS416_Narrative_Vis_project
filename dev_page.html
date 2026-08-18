@@ -25,10 +25,9 @@
         #map {
             display: block;
             width: 700px;
+            /* width: 770px; */
             max-width: none;
             margin-top: 34px;
-            width: 770px;
-            max-width: none;
         }
         .map-border {
             fill: none;
@@ -229,7 +228,8 @@
                         <!-- <input id="week-slider" type="range" min="31" max="43" value="31"> -->
                         <input id="week-slider" type="range" min="27" max="52" value="27">
                     </div>
-                    <span id="week-label">Week 27</span>
+                    <!-- <span id="week-label">Week 27</span> -->
+                    <span id="week-label">Week 31</span>
 
                     <div id="species-pick">
                         <span class="control-wrap" id="chk-msk-wrap" style="display: inline-block;">
@@ -250,16 +250,22 @@
 
                         const svg = d3.select("#map");
                         const sidebarWidth = 200;
-                        const mapWidth = 570;
+                        // const mapWidth = 570;                    // expanded range
+                        const mapWidth = 500;                       // original
                         const svgWidth = mapWidth + sidebarWidth;   // update #map 'width' CSS value above to match if this changed
-                        const svgHeight = 570;
+                        const svgHeight = 550;                      // original
+                        // const svgHeight = 570;                   // expanded range
                         const mapHeight = svgHeight;
                         svg.attr("width", svgWidth)
                            .attr("height", svgHeight);
 
-                        const map_scale = 400;
-                        const latMapOffset = 31.5;  // shift map leftward in SVG window
-                        const vertMapOffset = 3;  // shift map downward in SVG window
+                        const map_scale = 530;         // original
+                        const latMapOffset = 26;       // shift map leftward in SVG window
+                        const vertMapOffset = 5;       // shift map downward in SVG window
+                        // const map_scale = 400;      // expanded range
+                        // const latMapOffset = 31.5;  // shift map leftward in SVG window
+                        // const vertMapOffset = 3;    // shift map downward in SVG window
+
                         const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
                         const hexRadiusKm = hexSpacingKm / 2;
 
@@ -624,13 +630,16 @@
                             data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
                             data_osp = await d3.csv(`${dataDir}/osprey_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
 
-                            firstWeek = 27;
+                            firstWeek = 31;    // original range
+                            // firstWeek = 27; // expanded range
                             selectedWeek = firstWeek;
                             d3.select("#week-slider").property("value", selectedWeek);
                             d3.select("#week-label").text(`Week ${selectedWeek}`);
 
-                            lat_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lat));
-                            lon_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lon));
+                            // lat_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lat));
+                            // lon_range = d3.extent(data_msk, d => Math.round(d.cell_ctr_lon));
+                            lat_range = [-15, 40];           // hard-coded to optimal values for original narrative scenes, calculated from extent of original range
+                            lon_range = [-108, -50];         // hard-coded to optimal values for original narrative scenes
                             // https://observablehq.com/@d3/d3-extent
                             const centerLon = latMapOffset + (lon_range[0]-1 + lon_range[1]) / 2;
                             const centerLat = vertMapOffset + (lat_range[0]-1 + lat_range[1]) / 2;
