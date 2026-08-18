@@ -276,6 +276,11 @@
                         // const latMapOffset = 31.5;  // shift map leftward in SVG window
                         // const vertMapOffset = 3;    // shift map downward in SVG window
 
+                        const panOverscrollWest = 185;
+                        const panOverscrollEast = 0;
+                        const panOverscrollNorth = 250;
+                        const panOverscrollSouth = 0;
+
                         const hexSpacingKm = 50;  // used with dggridr::dgconstruct()
                         const hexRadiusKm = hexSpacingKm / 2;
 
@@ -1071,7 +1076,7 @@
                                              })
                                              .scaleExtent([1, 4]) // min/max zoom
                                              .extent([[0, 0], [mapWidth, mapHeight]]) // define the area in which zooming is allowed
-                                             .translateExtent([[0,0],[mapWidth, mapHeight]]) // limit panning to given area
+                                             .translateExtent([[-panOverscrollWest, -panOverscrollNorth], [mapWidth + panOverscrollEast, mapHeight + panOverscrollSouth]]) // allow directional overscroll beyond default viewport
                                              .on("zoom", (event) => {
                                                      currentTransform = event.transform;
                                                      mapLayer.attr("transform", currentTransform);
@@ -1108,10 +1113,10 @@
                         }
 
                         function clampTransform(transform) {
-                            const [[x0, y0], [x1, y1]] = [[0, 0], [mapWidth, mapHeight]];
+                            const [[x0, y0], [x1, y1]] = [[-panOverscrollWest, -panOverscrollNorth], [mapWidth + panOverscrollEast, mapHeight + panOverscrollSouth]];
                             const k = transform.k;
-                            const tx = Math.min(0, Math.max(mapWidth - x1 * k, transform.x));
-                            const ty = Math.min(0, Math.max(mapHeight - y1 * k, transform.y));
+                            const tx = Math.min(-x0 * k, Math.max(mapWidth - x1 * k, transform.x));
+                            const ty = Math.min(-y0 * k, Math.max(mapHeight - y1 * k, transform.y));
                             return d3.zoomIdentity.translate(tx, ty).scale(k);
                         }
 
