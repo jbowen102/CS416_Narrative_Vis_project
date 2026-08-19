@@ -403,6 +403,8 @@
                         let selectedWeek;
                         let data_msk;
                         let data_osp;
+                        let weekIndexMsk;
+                        let weekIndexOsp;
                         let layerMSK;
                         let layerOSP;
                         let zoomBehavior;
@@ -634,11 +636,25 @@
                                 .range(['white', color])
                         }
 
+                        function buildWeekIndex(rows) {
+                            const index = new Map();
+                            for (const row of rows) {
+                                const week = Number(row.week);
+                                if (!index.has(week)) {
+                                    index.set(week, []);
+                                }
+                                index.get(week).push(row);
+                            }
+                            return index;
+                        }
+
                         async function init() {
                             // data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_20260726_zf_clean_agg_weekly.csv`, d3.autoType);
                             // data_osp = await d3.csv(`${dataDir}/osprey_compl_20260801_zf_clean_agg_weekly.csv`, d3.autoType);
                             data_msk = await d3.csv(`${dataDir}/mississippi_kite_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
                             data_osp = await d3.csv(`${dataDir}/osprey_compl_exp1-2comb_20260803_zf_clean_agg_weekly.csv`, d3.autoType);
+                            weekIndexMsk = buildWeekIndex(data_msk);
+                            weekIndexOsp = buildWeekIndex(data_osp);
 
                             firstWeek = 31;    // original range
                             // firstWeek = 27; // expanded range
@@ -1354,8 +1370,8 @@
                             const mskChecked = wrapper.select("#chk-msk").property("checked");
                             const ospChecked = wrapper.select("#chk-osp").property("checked");
 
-                            const mskWeek = data_msk ? data_msk.filter(d => Number(d.week) === selectedWeek) : [];
-                            const ospWeek = data_osp ? data_osp.filter(d => Number(d.week) === selectedWeek) : [];
+                            const mskWeek = weekIndexMsk ? (weekIndexMsk.get(selectedWeek) || []) : [];
+                            const ospWeek = weekIndexOsp ? (weekIndexOsp.get(selectedWeek) || []) : [];
 
                             const mergedWeek = buildMergedWeekData(mskWeek, ospWeek, mskChecked, ospChecked);
                             const hexSel = dataLayer.selectAll(".data-hex")
